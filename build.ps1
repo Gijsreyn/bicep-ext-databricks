@@ -140,9 +140,14 @@ if ($Configuration -eq 'Release') {
     $configPath = Join-Path $PSScriptRoot 'bicepconfig.json'
 
     if (-not (Test-Path $configPath)) {
-        $bicepConfig = @{
+        $bicepConfig = [ordered]@{
             experimentalFeaturesEnabled = @{
                 localDeploy = $true
+                extensibility = $true
+            }
+            cloud = @{
+                credentialPrecedence = @('AzurePowerShell')
+                currentProfile = 'AzureCloud'
             }
             extensions = @{
                 databricksExtension = (Resolve-Path $targetName -Relative)

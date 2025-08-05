@@ -2,6 +2,10 @@
   "experimentalFeaturesEnabled": {
     "localDeploy": true
   },
+  "cloud": {
+    "credentialPrecedence": [ "AzurePowerShell"],
+    "currentProfile": "AzureCloud"
+  },
   "extensions": {
     "databricksExtension": "./output/databricks-extension"
   },
