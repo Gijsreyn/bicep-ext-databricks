@@ -1,3 +1,22 @@
+function Test-Bicep {
+    $bicepExe = Get-Command -Name 'bicep' -CommandType Application -ErrorAction Ignore
+    if (-not $bicepExe) {
+        return $false
+    }
+    else {
+        $version = & $bicepExe --version 
+        if ($version -match '(\d+\.\d+\.\d+)') {
+            $bicepVersion = [Version]$Matches[1]
+            $minVersion = [Version]'0.36.1'
+            if ($bicepVersion -le $minVersion) {
+                return $false
+            }
+        }
+    }
+    
+    return $true
+}
+
 function Initialize-TestCase {
     [CmdletBinding()]
     param (
@@ -35,65 +54,36 @@ function Initialize-TestCase {
         throw "Expected to find both .bicep and .bicepparam files, but found only one or none."
     }
 
-    Write-Verbose "Found bicep file: $($bicepFile.FullName)"
-    Write-Verbose "Found bicep parameter file: $($bicepFileParam.FullName)"
-    $fileCopy = Copy-Item -Path @($bicepFile.FullName, $bicepFileParam.FullName) -Destination $OutputPath -Force -PassThru
+    $filePathsToCopy = @($bicepFile.FullName, $bicepFileParam.FullName)
+    $filePathsToCopy += (Resolve-Path (Join-Path (Split-Path $PSScriptRoot -Parent) -ChildPath 'bicepconfig.json')).Path
 
-    return $fileCopy
+    $fileCopy = foreach ($fileToCopy in $filePathsToCopy) {
+        if (-not (Test-Path $fileToCopy)) {
+            throw "File not found: $fileToCopy"
+        } else {
+            if (-not (Test-Path $OutputPath)) {
+                New-Item -Path $OutputPath -ItemType Directory -Force | Out-Null
+                Write-Verbose "Created output directory: $OutputPath"
+            }
 
-    # # Prepare files
-    # $examplePath = Join-Path $ProjectRoot 'examples' 'workspace'
-    
-    # if (-not (Test-Path $examplePath)) {
-    #     throw "Examples path not found: $examplePath"
-    # }
-    
-    # $exampleFiles = Get-ChildItem -Path $examplePath -Include 'create.directory.bicep', 'create.directory.bicepparam' -Recurse
-    
-    # if ($exampleFiles.Count -ne 2) {
-    #     throw "Expected to find 2 example files, but found $($exampleFiles.Count)"
-    # }
-    
-    # # Process the bicep parameter file
-    # $bicepParamSourceFile = $exampleFiles | Where-Object -Property Name -eq 'create.directory.bicepparam'
-    # if (-not $bicepParamSourceFile) {
-    #     throw "Could not find create.directory.bicepparam file"
-    # }
-    
-    # $bicepParamFile = Get-Content -Path $bicepParamSourceFile.FullName -Raw 
-    # $bicepParamFile = $bicepParamFile -replace '<workspaceUrl>', $WorkspaceUrl
+            Copy-Item -Path $fileToCopy -Destination $OutputPath -Force -PassThru
+        }
+    }
 
-    # $bicepParamDestPath = Join-Path $TestDrivePath 'create.directory.bicepparam'
-    # Set-Content -Path $bicepParamDestPath -Value $bicepParamFile -Encoding utf8
-    # Write-Verbose "Created bicep parameter file: $bicepParamDestPath"
-    
-    # # Copy the bicep template file
-    # $bicepTemplateSourceFile = $exampleFiles | Where-Object -Property Name -eq 'create.directory.bicep'
-    # if (-not $bicepTemplateSourceFile) {
-    #     throw "Could not find create.directory.bicep file"
-    # }
-    
-    # $bicepTemplateDestPath = Join-Path $TestDrivePath 'create.directory.bicep'
-    # Copy-Item -Path $bicepTemplateSourceFile.FullName -Destination $bicepTemplateDestPath
-    # Write-Verbose "Copied bicep template file: $bicepTemplateDestPath"
+    foreach ($valueReplace in $ValuesToReplace.GetEnumerator()) {
+        # read the .bicepparam file and replace the values 
+        $fileParam = $fileCopy | Where-Object -Property Extension -EQ '.bicepparam'
+        $bicepParam = Get-Content -Path $fileParam.FullName -Raw
 
-    # # Copy the bicep configuration file
-    # $bicepConfigSourcePath = Join-Path $ProjectRoot 'bicepconfig.json'
-    # if (-not (Test-Path $bicepConfigSourcePath)) {
-    #     throw "Could not find bicepconfig.json at: $bicepConfigSourcePath"
-    # }
-    
-    # $bicepConfigDestPath = Join-Path $TestDrivePath 'bicepconfig.json'
-    # Copy-Item -Path $bicepConfigSourcePath -Destination $bicepConfigDestPath -Force
-    # Write-Verbose "Copied bicep configuration file: $bicepConfigDestPath"
-    
-    # Write-Output "Test case preparation completed successfully."
-    # Write-Output "Files prepared in: $TestDrivePath"
-    
-    # return @{
-    #     BicepParamFile = $bicepParamDestPath
-    #     BicepTemplateFile = $bicepTemplateDestPath
-    #     BicepConfigFile = $bicepConfigDestPath
-    #     TestDrivePath = $TestDrivePath
-    # }
+        Write-Verbose "Replacing '<$($valueReplace.Key)>' with '$($valueReplace.Value)' in bicepparam file: $($fileParam.FullName)"
+        $bicepParam = $bicepParam -replace "<$($valueReplace.Key)>", $valueReplace.Value
+        Set-Content -Path $fileParam.FullName -Value $bicepParam -Encoding utf8 -Force
+    }
+
+    return @{
+        bicepFile = $bicepFile.FullName
+        bicepParamFile = $bicepFileParam.FullName
+        outputPath = $OutputPath
+        filesCopied = $fileCopy | Select-Object -ExpandProperty FullName
+    }
 }
