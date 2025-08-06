@@ -23,12 +23,23 @@ public abstract class BaseHandler<TResource, TIdentifiers> : TypedResourceHandle
         object requestBody,
         CancellationToken cancellationToken)
     {
-        var credential = new DefaultAzureCredential();
-        var accessToken = await credential.GetTokenAsync(
-            new Azure.Core.TokenRequestContext(["2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"]),
-            cancellationToken);
+        string accessToken;
+        
+        var envToken = Environment.GetEnvironmentVariable("DATABRICKS_ACCESS_TOKEN");
+        if (!string.IsNullOrEmpty(envToken))
+        {
+            accessToken = envToken;
+        }
+        else
+        {
+            var credential = new DefaultAzureCredential();
+            var tokenResponse = await credential.GetTokenAsync(
+                new Azure.Core.TokenRequestContext(["2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"]),
+                cancellationToken);
+            accessToken = tokenResponse.Token;
+        }
 
-        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken.Token);
+        _httpClient.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", accessToken);
 
         var databricksUrl = request.Config.WorkspaceUrl.TrimEnd('/');
         var endpoint = $"{databricksUrl}{apiPath}";
