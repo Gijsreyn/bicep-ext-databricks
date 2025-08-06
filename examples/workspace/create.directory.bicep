@@ -8,5 +8,7 @@ extension databricksExtension with {
 }
 
 resource directory 'Directory' = {
-  path: '/Users/fake@example.com/project'
+  path: '/Shared/fake@example.com/project'
 }
+
+output directoryId string = directory.path

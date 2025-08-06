@@ -45,7 +45,7 @@ Describe 'Workspace handler functionality' {
             $res | Should -Not -BeNullOrEmpty
             $res | Should -Not -Contain "error"
             $LASTEXITCODE | Should -Be 0
-            $res | Should -Contain "Path"
+            $res | Should -BeLike "Output directoryId: *"
         }
     }
 }

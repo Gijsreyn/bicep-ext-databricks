@@ -1,3 +1,4 @@
+#Requires -Module ChangeLogManagement
 [CmdletBinding()]
 param (
     [Parameter()]
@@ -7,8 +8,14 @@ param (
     [string]
     $Configuration = "Debug",
 
+    [string]
+    $ContainerRegistryUrl = "acrdbtextension.azurecr.io",
+
     [switch]
-    $Clean
+    $Clean,
+
+    [switch]
+    $Publish
 )
 
 function getNetPath {
@@ -120,6 +127,18 @@ if ($Configuration -eq 'Release') {
         }
     }
 
+    $changeLog = Get-ChangelogData -Path (Join-Path $PSScriptRoot 'CHANGELOG.md') -ErrorAction Stop
+    $version = $changeLog.LastVersion
+    $bicepRegistryUrl = [System.String]::Concat('br:', $ContainerRegistryUrl, '/extension/', 'databricks', ':v', $version)
+
+    if ($Publish.IsPresent) {
+        $containerParams = $extensionParams
+        $containerParams += @('--target', $bicepRegistryUrl)
+        $containerParams += @('--force')
+
+        # TODO: Validate publishing
+    }
+
     $extensionParams += @(
         '--target', $targetName,
         '--force'
@@ -135,6 +154,7 @@ if ($Configuration -eq 'Release') {
     }
     else {
         Write-Warning "Bicep CLI is not installed. Skipping Bicep compilation."
+        return
     }
 
     $configPath = Join-Path $PSScriptRoot 'bicepconfig.json'
@@ -150,7 +170,7 @@ if ($Configuration -eq 'Release') {
                 currentProfile = 'AzureCloud'
             }
             extensions = @{
-                databricksExtension = (Resolve-Path $targetName -Relative)
+                databricksExtension = $bicepRegistryUrl
             }
             implicitExtensions = @()
         } | ConvertTo-Json -Depth 10

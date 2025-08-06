@@ -21,7 +21,7 @@ function Setup-Environment {
     param(
         [Parameter(Mandatory = $false)]
         [string]
-        $ResourceGroupName = 'rg-publishing-databricks-extension',
+        $ResourceGroupName = 'rg-publishing-dbt-extension',
 
         [Parameter(Mandatory = $false)]
         [string]
@@ -29,11 +29,11 @@ function Setup-Environment {
 
         [Parameter(Mandatory = $false)]
         [string]
-        $ContainerRegistryName = "acrdatabricksextension",
+        $ContainerRegistryName = "acrdbtextension",
 
         [Parameter(Mandatory = $false)]
         [string]
-        $DatabricksWorkspaceName = 'dbt-publishing-databricks-extension'
+        $DatabricksWorkspaceName = 'dbt-publishing-dbt-extension'
     )   
 
     Install-RequiredModules
