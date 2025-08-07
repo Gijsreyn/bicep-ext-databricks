@@ -52,10 +52,10 @@ and execute tests afterwards.
 
 To execute the all operations, make sure you have:
 
-- .NET SDK v9.0 installed
-- Bicep CLI v0.36.1 or higher
-- An Azure subscription
-- Basic knowledge around Pester
+* .NET SDK v9.0 installed
+* Bicep CLI v0.36.1 or higher
+* An Azure subscription
+* Basic knowledge around Pester
 
 Other prerequisites are saved locally in the project structure when you
 bootstrap the environment.
@@ -171,8 +171,13 @@ the available examples from the particular released versions:
 
 Check out the [docs][03] section for more information around Databricks resources.
 
+## Contributing
+
+Want to contribute? Check out the [CONTRIBUTING.md][04] for more information.
+
 <!-- Link reference definitions -->
 [00]: CHANGELOG.md
 [01]: ./examples/workspace/directory.bicep
 [02]: ./examples/compute/cluster.basic.bicep
 [03]: ./docs/index.md
+[04]: CONTRIBUTING.md
