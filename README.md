@@ -167,7 +167,12 @@ the available examples from the particular released versions:
 > [!NOTE]
 > Always make sure to use the latest version of the extension.
 
+## Documentation
+
+Check out the [docs][03] section for more information around Databricks resources.
+
 <!-- Link reference definitions -->
 [00]: CHANGELOG.md
 [01]: ./examples/workspace/directory.bicep
 [02]: ./examples/compute/cluster.basic.bicep
+[03]: ./docs/index.md
