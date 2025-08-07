@@ -14,21 +14,20 @@ BeforeDiscovery {
 
 BeforeAll {
     . (Join-Path $rootPath 'scripts' 'Initialize-TestCase.ps1')
-
-    $initTestCaseParams = @{
-        Path            = (Join-Path $rootPath 'examples' 'workspace')
-        OutputPath      = $testDrive
-        ExampleName     = 'create.directory'
-        ValuesToReplace = @{
-            workspaceUrl = $WorkspaceUrl
-        }
-    }
-    $script:testCase = Initialize-TestCase @initTestCaseParams
 }
 
 Describe 'Workspace handler functionality' -Skip:(!$skip) {
-    It "Should create a workspace directory successfully" {
-        # TODO: Add br in the list
+    It "Should create a cluster successfully" {
+        $initTestCaseParams = @{
+            Path            = (Join-Path $rootPath 'examples' 'workspace')
+            OutputPath      = $testDrive
+            ExampleName     = 'directory'
+            ValuesToReplace = @{
+                workspaceUrl = $WorkspaceUrl
+            }
+        }
+        $testCase = Initialize-TestCase @initTestCaseParams
+        
         $result = & bicep local-deploy $script:testCase.filesCopied[1] # Should be .bicepparam file
         $LASTEXITCODE | Should -Be 0
         $result | Should -Not -BeNullOrEmpty
@@ -56,15 +55,15 @@ resource directory 'Directory' = {
 output directoryId string = directory.path
 
 '@
-            $bicepFilePath = Join-Path $testDrive 'create.directory.user.bicep'
-            Set-Content -Path $bicepFilePath -Value $bicepFile -Encoding UTF8
-            $bicepParamFile = @"
+        $bicepFilePath = Join-Path $testDrive 'create.directory.user.bicep'
+        Set-Content -Path $bicepFilePath -Value $bicepFile -Encoding UTF8
+        $bicepParamFile = @"
 using 'create.directory.user.bicep'
 
 param workspaceUrl = '$workspaceUrl'
 "@
-            $script:bicepParamFilePath = Join-Path $testDrive 'create.directory.user.bicepparam'
-            Set-Content -Path $bicepParamFilePath -Value $bicepParamFile -Encoding UTF8
+        $script:bicepParamFilePath = Join-Path $testDrive 'create.directory.user.bicepparam'
+        Set-Content -Path $bicepParamFilePath -Value $bicepParamFile -Encoding UTF8
 
         $result = & bicep local-deploy $bicepParamFilePath
         $LASTEXITCODE | Should -Be 1

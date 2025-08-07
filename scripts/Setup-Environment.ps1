@@ -81,7 +81,7 @@ function Setup-Environment {
             Name                = $DatabricksWorkspaceName
             ResourceGroupName   = $ResourceGroupName
             Location            = $Location
-            Sku                 = 'Standard'
+            Sku                 = 'Premium' # Should have all features
         }
         $databricks = New-AzDatabricksWorkspace @databricksParams
     }
