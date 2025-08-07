@@ -1,5 +1,22 @@
 # Changelog
 
+## [0.1.3] - 2025-08-07
+
+- Improved error handling on `ClusterHandler`.
+- Add tracing to `ClusterHandler`.
+
+## [0.1.2] - 2025-08-07
+
+### Fixed
+
+- Update `ClusterHandler` to support update scenario.
+
+## [0.1.1] - 2025-08-07
+
+### Added
+
+- Added `ClusterHandler` for managing Databricks clusters via the `Cluster` Bicep resource.
+
 ## [0.1.0] - 2025-08-05
 
 ### Added

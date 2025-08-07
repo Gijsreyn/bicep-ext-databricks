@@ -252,7 +252,6 @@ if ($Configuration -eq 'Release')
     }
 
     $configPath = Join-Path $PSScriptRoot 'bicepconfig.json'
-    Write-Verbose -Message "Generating Bicep configuration file at '$configPath'." -Verbose
     generateConfig -configPath $configPath -bicepRegistryUrl $bicepRegistryUrl
 
     if ($Test.IsPresent)

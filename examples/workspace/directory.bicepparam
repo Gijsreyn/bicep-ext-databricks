@@ -1,3 +1,3 @@
-using 'create.directory.bicep'
+using 'directory.bicep'
 
 param workspaceUrl = '<workspaceUrl>'

@@ -1,4 +1,4 @@
-namespace Bicep.Extension.Databricks.Handlers;
+namespace Bicep.Extension.Databricks.Handlers.Workspace;
 
 public class DirectoryHandler : BaseHandler<Directory, DirectoryIdentifiers>
 {

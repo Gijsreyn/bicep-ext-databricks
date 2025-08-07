@@ -17,7 +17,7 @@ public abstract class BaseHandler<TResource, TIdentifiers> : TypedResourceHandle
         _httpClient = new HttpClient();
     }
 
-    protected async Task<ResourceResponse> CallDatabricksApi(
+    protected async Task<string> CallDatabricksApiForResponse(
         ResourceRequest request,
         string apiPath,
         object requestBody,
@@ -52,13 +52,36 @@ public abstract class BaseHandler<TResource, TIdentifiers> : TypedResourceHandle
 
         var content = new StringContent(json, Encoding.UTF8, "application/json");
 
-        var response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
+        HttpResponseMessage response;
+        if (string.IsNullOrEmpty(json) || json == "{}")
+        {
+            // For GET requests or requests with empty body, use GET method
+            response = await _httpClient.GetAsync(endpoint, cancellationToken);
+        }
+        else
+        {
+            // For requests with payload, use POST method
+            response = await _httpClient.PostAsync(endpoint, content, cancellationToken);
+        }
+
+        var responseContent = await response.Content.ReadAsStringAsync(cancellationToken);
 
         if (!response.IsSuccessStatusCode)
         {
-            var errorContent = await response.Content.ReadAsStringAsync(cancellationToken);
-            throw new InvalidOperationException($"Failed to call Databricks API {apiPath}. Status: {response.StatusCode}, Error: {errorContent}");
+            throw new InvalidOperationException($"Failed to call Databricks API {apiPath}. Status: {response.StatusCode}, Error: {responseContent}");
         }
+
+        return responseContent;
+    }
+
+    protected async Task<ResourceResponse> CallDatabricksApi(
+        ResourceRequest request,
+        string apiPath,
+        object requestBody,
+        CancellationToken cancellationToken)
+    {
+        // Call the API and get the response content
+        await CallDatabricksApiForResponse(request, apiPath, requestBody, cancellationToken);
 
         return GetResponse(request);
     }
