@@ -2,7 +2,8 @@
 [CmdletBinding()]
 param (
     [Parameter()]
-    [string]$ProjectName = 'Databricks.extension',
+    [string]
+    $ProjectName = 'Databricks.extension',
 
     [ValidateSet("Release", "Debug")]
     [string]

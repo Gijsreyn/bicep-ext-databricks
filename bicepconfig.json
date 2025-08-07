@@ -4,7 +4,10 @@
     "extensibility": true
   },
   "cloud": {
-    "credentialPrecedence": [ "AzurePowerShell"],
+    "credentialPrecedence": [
+      "AzurePowerShell",
+      "AzureCLI"
+    ],
     "currentProfile": "AzureCloud"
   },
   "extensions": {

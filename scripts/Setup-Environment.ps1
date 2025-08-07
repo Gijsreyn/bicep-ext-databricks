@@ -33,22 +33,22 @@ function Install-RequiredModules {
 function Setup-Environment {
     [CmdletBinding()]
     param(
-        [Parameter()]
+        [Parameter(Mandatory = $true)]
         [string]
-        $ResourceGroupName = 'rg-pub-dbt-extension',
+        $ResourceGroupName,
 
         [Parameter()]
         [string]
         $Location = 'westeurope',
 
-        [Parameter()]
+        [Parameter(Mandatory = $true)]
         [string]
-        $ContainerRegistryName = "acrdbtextension",
+        $ContainerRegistryName,
 
-        [Parameter()]
+        [Parameter(Mandatory = $true)]
         [string]
-        $DatabricksWorkspaceName = 'dbt-pub-dbt-extension'
-    )   
+        $DatabricksWorkspaceName
+    )
 
     Install-RequiredModules
 
@@ -71,7 +71,7 @@ function Setup-Environment {
             PublicNetworkAccess  = 'Enabled'
             EnableAdminUser      = $false
         }
-        New-AzContainerRegistry @containerRegistry
+        New-AzContainerRegistry @containerRegistry -ErrorAction Ignore
     }
 
     $databricks = Get-AzDatabricksWorkspace -Name $DatabricksWorkspaceName -ResourceGroupName $ResourceGroupName -ErrorAction SilentlyContinue
@@ -91,3 +91,4 @@ function Setup-Environment {
         containerRegistryUrl = $containerRegistry.LoginServer
     }
 }
+# TODO: To be replaced by main.bicep

@@ -1,4 +1,47 @@
 function Initialize-TestCase {
+    <#
+    .SYNOPSIS
+        Initializes a test case by copying example Bicep files and configuration, and replacing parameter values for testing.
+
+    .DESCRIPTION
+        The function `Initialize-TestCase` locates the specified example .bicep and .bicepparam files,
+        copies them along with the bicepconfig.json to the output directory, and replaces parameter values in the 
+        .bicepparam file as needed. It returns a hashtable with paths to the copied files and other metadata for use
+        in automated tests.
+
+    .PARAMETER Path
+        The path to the directory containing the example Bicep files.
+
+    .PARAMETER OutputPath
+        The directory where the example files and configuration will be copied for the test case.
+
+    .PARAMETER ExampleName
+        The base name of the example files to locate (e.g., 'cluster.basic').
+
+    .PARAMETER ValuesToReplace
+        Hashtable of parameter names and values to replace in the .bicepparam file.
+
+    .EXAMPLE
+        The following example initializes a test case by copying the Bicep files from the 'examples/compute' directory,
+        replacing the `workspaceUrl` parameter in the .bicepparam file, and returning
+        a hashtable with paths to the copied files and other metadata.
+
+        ```powershell
+        $initTestCaseParams = @{
+            Path            = (Join-Path $rootPath 'examples' 'compute')
+            OutputPath      = $testDrive
+            ExampleName     = 'cluster.basic'
+            ValuesToReplace = @{
+                workspaceUrl = $WorkspaceUrl
+            }
+        }
+        $testCase = Initialize-TestCase @initTestCaseParams
+        ```
+
+    .NOTES
+        Tags: Bicep, TestCase, Pester
+        Author: Gijs Reijn
+    #>
     [CmdletBinding()]
     param (
         [Parameter(Mandatory = $true)]
