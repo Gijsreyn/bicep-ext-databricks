@@ -17,7 +17,7 @@ BeforeAll {
 }
 
 Describe 'Workspace handler functionality' -Skip:(!$skip) {
-    It "Should create a cluster successfully" {
+    It "Should create a directory successfully" {
         $initTestCaseParams = @{
             Path            = (Join-Path $rootPath 'examples' 'workspace')
             OutputPath      = $testDrive
@@ -28,7 +28,7 @@ Describe 'Workspace handler functionality' -Skip:(!$skip) {
         }
         $testCase = Initialize-TestCase @initTestCaseParams
         
-        $result = & bicep local-deploy $script:testCase.filesCopied[1] # Should be .bicepparam file
+        $result = & bicep local-deploy $testCase.filesCopied[1] # Should be .bicepparam file
         $LASTEXITCODE | Should -Be 0
         $result | Should -Not -BeNullOrEmpty
         $result | Should -Not -Contain "Failed"
