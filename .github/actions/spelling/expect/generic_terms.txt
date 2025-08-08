@@ -1,0 +1,11 @@
+acrdbtextension
+aws
+azurecr
+bitbucket
+github
+LASTEXITCODE
+linux
+osx
+ubuntu
+westeurope
+winget
