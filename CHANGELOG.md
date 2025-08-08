@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.5] - 2025-08-08
+
+* Added new `GitCredentialHander` to create a Git credential for repository.
+
 ## [0.1.4] - 2025-08-08
 
 * Added new `RepoHandler` to create repository.

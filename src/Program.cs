@@ -18,6 +18,7 @@ builder.Services
     .WithResourceHandler<SecretHandler>()
     .WithResourceHandler<DirectoryHandler>()
     .WithResourceHandler<RepoHandler>()
+    .WithResourceHandler<GitCredentialHandler>()
     .WithResourceHandler<ClusterHandler>();
 
 var app = builder.Build();

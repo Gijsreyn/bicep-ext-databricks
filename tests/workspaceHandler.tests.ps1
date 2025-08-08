@@ -68,7 +68,7 @@ param workspaceUrl = '$workspaceUrl'
         $result = & bicep local-deploy $bicepParamFilePath
         $LASTEXITCODE | Should -Be 1
         $result | Should -Not -BeNullOrEmpty
-        $result | Should -Contain 'Error: RpcException - Rpc request failed: Failed to call Databricks API /api/2.0/workspace/mkdirs. Status: BadRequest, Error: {"error_code":"DIRECTORY_PROTECTED","message":"Folder Users is protected"}'
+        $result | Should -Contain 'Error: RpcException - Rpc request failed: {"error_code":"DIRECTORY_PROTECTED","message":"Folder Users is protected"}'
     }
 }
 

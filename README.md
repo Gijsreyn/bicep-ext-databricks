@@ -159,25 +159,39 @@ Each handler should have at least one example available in the `examples` direct
 These examples are also used for testing purposes. The following table represents
 the available examples from the particular released versions:
 
-| **Example name**           | **Description**                               | **Available from** |
-| -------------------------- | --------------------------------------------- | ------------------ |
-| [Create a directory][01]   | Creates a directory in a Databricks workspace | v0.1.0 and above   |
-| [Create basic cluster][02] | Deploys a basic cluster                       | v0.1.2 and above   |
+| **Example name**            | **Description**                                 | **Available from** |
+| --------------------------- | ----------------------------------------------- | ------------------ |
+| [Create a directory][01]    | Creates a directory in a Databricks workspace   | v0.1.0 and above   |
+| [Create basic cluster][02]  | Deploys a basic cluster                         | v0.1.2 and above   |
+| [Create a repository][03]   | Create a repository in a Databricks workspace   | v0.1.5 and above   |
+| [Create Git credential][04] | Creates a new Git credential in Linked Accounts | v0.1.5 and above   |
 
 > [!NOTE]
 > Always make sure to use the latest version of the extension.
 
 ## Documentation
 
-Check out the [docs][03] section for more information around Databricks resources.
+Check out the [docs][05] section for more information around Databricks resources.
+
+## Troubleshooting
+
+Encounter any issues while running `bicep local-deploy`? Want to see what is
+happening behind the scenes? In your terminal session, you can add the following
+environment variable to enable tracing:
+
+```powershell
+$env:BICEP_TRACING_ENABLED = $true
+```
 
 ## Contributing
 
-Want to contribute? Check out the [CONTRIBUTING.md][04] for more information.
+Want to contribute? Check out the [CONTRIBUTING.md][06] for more information.
 
 <!-- Link reference definitions -->
 [00]: CHANGELOG.md
 [01]: ./examples/workspace/directory.bicep
 [02]: ./examples/compute/cluster.basic.bicep
-[03]: ./docs/index.md
-[04]: CONTRIBUTING.md
+[03]: ./examples/workspace/repo.basic.bicep
+[04]: ./examples/workspace/gitCredential.bicep
+[05]: ./docs/index.md
+[06]: CONTRIBUTING.md

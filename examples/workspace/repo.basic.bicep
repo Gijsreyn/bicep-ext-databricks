@@ -1,4 +1,5 @@
 // requires Git credentials to be configured in Settings -> Linked Accounts
+// Or use the 'gitCredential' resource
 
 targetScope = 'local'
 
