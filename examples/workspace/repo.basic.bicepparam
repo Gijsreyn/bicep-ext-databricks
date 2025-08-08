@@ -1,3 +1,3 @@
-using 'cluster.basic.bicep'
+using 'repo.basic.bicep'
 
 param workspaceUrl = '<workspaceUrl>'

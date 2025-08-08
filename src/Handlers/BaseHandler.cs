@@ -1,6 +1,8 @@
 using Azure.Identity;
 using Bicep.Local.Extension.Host.Handlers;
 using Microsoft.Azure.Databricks.Client;
+using Microsoft.Azure.Databricks.Client.Models;
+using System.Reflection;
 
 namespace Bicep.Extension.Databricks.Handlers;
 
@@ -49,5 +51,20 @@ public abstract class BaseHandler<TResource, TIdentifiers> : TypedResourceHandle
     protected async Task<DatabricksClient> GetClientAsync(ResourceRequest request, CancellationToken cancellationToken)
     {
         return await GetDatabricksClient(request, cancellationToken);
+    }
+
+    protected ResourceResponse CreateResourceResponse<TDatabricksResult>(
+        TDatabricksResult databricksResult, 
+        string resourceType,
+        Func<TDatabricksResult, TIdentifiers> createIdentifiers,
+        Func<TDatabricksResult, TResource> createResource)
+    {
+        return new ResourceResponse
+        {
+            Type = resourceType,
+            ApiVersion = "2.0",
+            Identifiers = createIdentifiers(databricksResult),
+            Properties = createResource(databricksResult)
+        };
     }
 }

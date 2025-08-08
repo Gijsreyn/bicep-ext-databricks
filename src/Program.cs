@@ -17,6 +17,7 @@ builder.Services
         configurationType: typeof(Configuration))
     .WithResourceHandler<SecretHandler>()
     .WithResourceHandler<DirectoryHandler>()
+    .WithResourceHandler<RepoHandler>()
     .WithResourceHandler<ClusterHandler>();
 
 var app = builder.Build();
