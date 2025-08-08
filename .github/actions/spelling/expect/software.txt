@@ -24,3 +24,4 @@ typeof
 utf
 workflows
 workspaces
+winget
