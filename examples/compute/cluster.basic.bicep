@@ -7,7 +7,7 @@ extension databricksExtension with {
 }
 
 resource cluster 'Cluster' = {
-  clusterName: 'cluster2'
+  clusterName: 'cluster1'
   sparkVersion: '7.3.x-scala2.12'
   autoscale: {
     minWorkers: 2
