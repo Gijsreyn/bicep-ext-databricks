@@ -195,3 +195,5 @@ Want to contribute? Check out the [CONTRIBUTING.md][06] for more information.
 [04]: ./examples/workspace/gitCredential.bicep
 [05]: ./docs/index.md
 [06]: CONTRIBUTING.md
+
+weirdoword
