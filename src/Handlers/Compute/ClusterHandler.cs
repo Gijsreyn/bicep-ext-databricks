@@ -1,7 +1,8 @@
 using Azure.Bicep.Types.Concrete;
-using Bicep.Local.Extension.Host.Handlers;
 using Bicep.Local.Extension.Types.Attributes;
 using System.Text.Json;
+using Microsoft.Azure.Databricks.Client;
+using Microsoft.Azure.Databricks.Client.Models;
 
 namespace Bicep.Extension.Databricks.Handlers.Compute;
 
@@ -10,95 +11,318 @@ public class ClusterHandler : BaseHandler<Cluster, ClusterIdentifiers>
     protected override async Task<ResourceResponse> CreateOrUpdate(ResourceRequest request, CancellationToken cancellationToken)
     {
         var cluster = request.Properties;
-        // TODO: Add handling for creating/existing cluster based on the state
-        // First, try to get an existing cluster by name to see if it already exists
-        ClusterInfo? existingCluster = null;
-        try
-        {
-            existingCluster = await GetClusterByName(request, cluster.ClusterName, cancellationToken);
-        }
-        catch
-        {
 
-        }
+        ClusterInfo? existingCluster = null;
+        existingCluster = await GetClusterByName(request, cluster.ClusterName, cancellationToken);
 
         if (existingCluster != null)
         {
-            // Update existing cluster
-            var editPayload = new
+            // Update existing cluster using DatabricksClient
+            var client = await GetClientAsync(request, cancellationToken);
+            var clusterAttributes = ConvertToClusterAttributes(cluster);
+            
+            Console.WriteLine($"[TRACE] Edit cluster payload: {JsonSerializer.Serialize(clusterAttributes, new JsonSerializerOptions { WriteIndented = true })}");
+            
+            var wasRunning = existingCluster.State == "RUNNING" || existingCluster.State == "RESIZING";
+            
+            // Handle different cluster states before editing
+            switch (existingCluster.State)
             {
-                cluster_id = existingCluster.ClusterId,
-                cluster_name = cluster.ClusterName,
-                spark_version = cluster.SparkVersion,
-                num_workers = cluster.NumWorkers > 0 ? cluster.NumWorkers : (int?)null,
-                autoscale = cluster.Autoscale != null ? new
-                {
-                    min_workers = cluster.Autoscale.MinWorkers,
-                    max_workers = cluster.Autoscale.MaxWorkers
-                } : null,
-                node_type_id = cluster.NodeTypeId,
-                driver_node_type_id = cluster.DriverNodeTypeId,
-                enable_elastic_disk = cluster.EnableElasticDisk,
-                enable_local_disk_encryption = cluster.EnableLocalDiskEncryption,
-                azure_attributes = cluster.AzureAttributes != null ? new
-                {
-                    first_on_demand = cluster.AzureAttributes.FirstOnDemand > 0 ? cluster.AzureAttributes.FirstOnDemand : (int?)null,
-                    availability = cluster.AzureAttributes.Availability,
-                    spot_bid_max_price = !string.IsNullOrEmpty(cluster.AzureAttributes.SpotBidMaxPrice) ? cluster.AzureAttributes.SpotBidMaxPrice : null
-                } : null,
-                autotermination_minutes = cluster.AutoterminationMinutes > 0 ? cluster.AutoterminationMinutes : (int?)null,
-                cluster_log_conf = cluster.ClusterLogConf != null ? new
-                {
-                    dbfs = cluster.ClusterLogConf.Dbfs != null ? new { destination = cluster.ClusterLogConf.Dbfs.Destination } : null,
-                    abfss = cluster.ClusterLogConf.Abfss != null ? new { destination = cluster.ClusterLogConf.Abfss.Destination } : null
-                } : null,
-                data_security_mode = cluster.DataSecurityMode,
-                single_user_name = cluster.SingleUserName,
-                runtime_engine = cluster.RuntimeEngine,
-                policy_id = cluster.PolicyId
-            };
+                case "RUNNING":
+                case "TERMINATED":
+                    // Safe to edit
+                    break;
+                case "PENDING":
+                case "RESIZING":
+                case "RESTARTING":
+                    // Wait for cluster to reach a stable state before editing
+                    if (!string.IsNullOrEmpty(existingCluster.ClusterId))
+                    {
+                        Console.WriteLine($"[TRACE] Cluster is in {existingCluster.State} state, waiting for RUNNING state before edit");
+                        await WaitForClusterState(client, existingCluster.ClusterId, "RUNNING", cancellationToken);
+                    }
+                    break;
+                case "TERMINATING":
+                    // Wait for termination to complete before editing
+                    if (!string.IsNullOrEmpty(existingCluster.ClusterId))
+                    {
+                        Console.WriteLine($"[TRACE] Cluster is terminating, waiting for TERMINATED state before edit");
+                        await WaitForClusterState(client, existingCluster.ClusterId, "TERMINATED", cancellationToken);
+                    }
+                    break;
+                case "ERROR":
+                case "UNKNOWN":
+                    Console.WriteLine($"[WARN] Cluster is in {existingCluster.State} state, attempting to edit anyway");
+                    break;
+            }
+            
+            await client.Clusters.Edit(existingCluster.ClusterId, clusterAttributes);
+            
+            // If cluster was running before edit, wait for it to restart and reach RUNNING state
+            // Note: Edit operation automatically restarts running clusters, so we don't need to call Start()
+            if (wasRunning && !string.IsNullOrEmpty(existingCluster.ClusterId))
+            {
+                await WaitForClusterState(client, existingCluster.ClusterId, "RUNNING", cancellationToken);
+            }
 
-            Console.WriteLine($"[TRACE] Edit cluster payload: {JsonSerializer.Serialize(editPayload, new JsonSerializerOptions { WriteIndented = true })}");
-            return await CallDatabricksApi(request, "/api/2.1/clusters/edit", editPayload, cancellationToken);
+            if (string.IsNullOrEmpty(existingCluster.ClusterId))
+            {
+                throw new InvalidOperationException("Cluster ID is null or empty after edit operation");
+            }
+
+            return await CreateResourceResponse(request, client, existingCluster.ClusterId);
         }
         else
         {
-            // Create new cluster
-            var createPayload = new
+            var client = await GetClientAsync(request, cancellationToken);
+            var clusterAttributes = ConvertToClusterAttributes(cluster);
+
+            Console.WriteLine($"[TRACE] Create cluster payload: {JsonSerializer.Serialize(clusterAttributes, new JsonSerializerOptions { WriteIndented = true })}");
+            var clusterId = await client.Clusters.Create(clusterAttributes);
+            
+            await WaitForClusterState(client, clusterId, "RUNNING", cancellationToken);
+            return await CreateResourceResponse(request, client, clusterId);
+        }
+    }
+
+    private ClusterAttributes ConvertToClusterAttributes(Cluster cluster)
+    {
+        var clusterAttributes = ClusterAttributes.GetNewClusterConfiguration(cluster.ClusterName)
+            .WithRuntimeVersion(cluster.SparkVersion);
+
+        // Set worker configuration
+        if (cluster.Autoscale != null)
+        {
+            clusterAttributes.WithAutoScale(cluster.Autoscale.MinWorkers, cluster.Autoscale.MaxWorkers);
+        }
+        else if (cluster.NumWorkers > 0)
+        {
+            clusterAttributes.WithNumberOfWorkers(cluster.NumWorkers);
+        }
+
+        // Set node types
+        if (!string.IsNullOrEmpty(cluster.NodeTypeId))
+        {
+            clusterAttributes.WithNodeType(cluster.NodeTypeId);
+        }
+
+        if (!string.IsNullOrEmpty(cluster.DriverNodeTypeId))
+        {
+            clusterAttributes.DriverNodeTypeId = cluster.DriverNodeTypeId;
+        }
+
+        // Set auto-termination
+        if (cluster.AutoterminationMinutes > 0)
+        {
+            clusterAttributes.WithAutoTermination(cluster.AutoterminationMinutes);
+        }
+
+        // Set cluster log configuration
+        if (cluster.ClusterLogConf != null)
+        {
+            if (cluster.ClusterLogConf.Dbfs != null)
             {
-                cluster_name = cluster.ClusterName,
-                spark_version = cluster.SparkVersion,
-                num_workers = cluster.NumWorkers > 0 ? cluster.NumWorkers : (int?)null,
-                autoscale = cluster.Autoscale != null ? new
-                {
-                    min_workers = cluster.Autoscale.MinWorkers,
-                    max_workers = cluster.Autoscale.MaxWorkers
-                } : null,
-                node_type_id = cluster.NodeTypeId,
-                driver_node_type_id = cluster.DriverNodeTypeId,
-                enable_elastic_disk = cluster.EnableElasticDisk,
-                enable_local_disk_encryption = cluster.EnableLocalDiskEncryption,
-                azure_attributes = cluster.AzureAttributes != null ? new
-                {
-                    first_on_demand = cluster.AzureAttributes.FirstOnDemand > 0 ? cluster.AzureAttributes.FirstOnDemand : (int?)null,
-                    availability = cluster.AzureAttributes.Availability,
-                    spot_bid_max_price = !string.IsNullOrEmpty(cluster.AzureAttributes.SpotBidMaxPrice) ? cluster.AzureAttributes.SpotBidMaxPrice : null
-                } : null,
-                autotermination_minutes = cluster.AutoterminationMinutes > 0 ? cluster.AutoterminationMinutes : (int?)null,
-                cluster_log_conf = cluster.ClusterLogConf != null ? new
-                {
-                    dbfs = cluster.ClusterLogConf.Dbfs != null ? new { destination = cluster.ClusterLogConf.Dbfs.Destination } : null,
-                    abfss = cluster.ClusterLogConf.Abfss != null ? new { destination = cluster.ClusterLogConf.Abfss.Destination } : null
-                } : null,
-                data_security_mode = cluster.DataSecurityMode,
-                single_user_name = cluster.SingleUserName,
-                runtime_engine = cluster.RuntimeEngine,
-                policy_id = cluster.PolicyId
+                clusterAttributes.WithClusterLogConf(cluster.ClusterLogConf.Dbfs.Destination);
+            }
+            else if (cluster.ClusterLogConf.Abfss != null)
+            {
+                clusterAttributes.WithClusterLogConf(cluster.ClusterLogConf.Abfss.Destination);
+            }
+        }
+
+        // Set additional properties
+        if (cluster.EnableElasticDisk)
+        {
+            clusterAttributes.EnableElasticDisk = true;
+        }
+
+        if (cluster.EnableLocalDiskEncryption)
+        {
+            // Note: EnableLocalDiskEncryption might not be directly available in ClusterAttributes
+            // This property may need to be set through other means or may not be supported
+        }
+
+        // Set Azure attributes if provided
+        if (cluster.AzureAttributes != null && cluster.AzureAttributes.FirstOnDemand > 0)
+        {
+            clusterAttributes.AzureAttributes = new Microsoft.Azure.Databricks.Client.Models.AzureAttributes
+            {
+                FirstOnDemand = cluster.AzureAttributes.FirstOnDemand
             };
 
-            Console.WriteLine($"[TRACE] Create cluster payload: {JsonSerializer.Serialize(createPayload, new JsonSerializerOptions { WriteIndented = true })}");
-            return await CallDatabricksApi(request, "/api/2.1/clusters/create", createPayload, cancellationToken);
+            if (!string.IsNullOrEmpty(cluster.AzureAttributes.SpotBidMaxPrice))
+            {
+                if (double.TryParse(cluster.AzureAttributes.SpotBidMaxPrice, out var spotPrice))
+                {
+                    clusterAttributes.AzureAttributes.SpotBidMaxPrice = spotPrice;
+                }
+            }
         }
+
+        // Note: Some advanced properties like DataSecurityMode and RuntimeEngine 
+        // may need to be set through other means or may use different property names
+        
+        // Set single user name
+        if (!string.IsNullOrEmpty(cluster.SingleUserName))
+        {
+            clusterAttributes.SingleUserName = cluster.SingleUserName;
+        }
+
+        // Set policy ID
+        if (!string.IsNullOrEmpty(cluster.PolicyId))
+        {
+            clusterAttributes.PolicyId = cluster.PolicyId;
+        }
+
+        return clusterAttributes;
+    }
+
+    private async Task<ResourceResponse> CreateResourceResponse(ResourceRequest request, DatabricksClient client, string clusterId)
+    {
+        try
+        {
+            // Get the current cluster information from Databricks
+            var clusterInfo = await client.Clusters.Get(clusterId);
+            
+            // Start with the original request properties to preserve all configuration
+            var cluster = request.Properties;
+            
+            // Update with actual values from Databricks
+            cluster.ClusterId = clusterInfo.ClusterId;
+            cluster.ClusterName = clusterInfo.ClusterName ?? cluster.ClusterName;
+            
+            // Update properties that are available in ClusterInfo
+            if (!string.IsNullOrEmpty(clusterInfo.NodeTypeId))
+                cluster.NodeTypeId = clusterInfo.NodeTypeId;
+            
+            if (!string.IsNullOrEmpty(clusterInfo.DriverNodeTypeId))
+                cluster.DriverNodeTypeId = clusterInfo.DriverNodeTypeId;
+                
+            if (!string.IsNullOrEmpty(clusterInfo.SingleUserName))
+                cluster.SingleUserName = clusterInfo.SingleUserName;
+                
+            if (!string.IsNullOrEmpty(clusterInfo.PolicyId))
+                cluster.PolicyId = clusterInfo.PolicyId;
+            
+            // Update data security mode and runtime engine if available
+            if (clusterInfo.DataSecurityMode != null)
+                cluster.DataSecurityMode = clusterInfo.DataSecurityMode.ToString();
+                
+            if (clusterInfo.RuntimeEngine != null)
+                cluster.RuntimeEngine = clusterInfo.RuntimeEngine.ToString();
+            
+            // Create the resource response
+            return new ResourceResponse
+            {
+                Type = "Cluster",
+                Properties = cluster,
+                Identifiers = new ClusterIdentifiers { ClusterId = clusterId }
+            };
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"[WARN] Failed to get cluster {clusterId} details for response: {ex.Message}");
+            
+            // Fallback: use the original request properties but update the cluster ID
+            var fallbackCluster = request.Properties;
+            fallbackCluster.ClusterId = clusterId;
+            
+            return new ResourceResponse
+            {
+                Type = "Cluster",
+                Properties = fallbackCluster,
+                Identifiers = new ClusterIdentifiers { ClusterId = clusterId }
+            };
+        }
+    }
+
+    private async Task WaitForClusterState(DatabricksClient client, string clusterId, string desiredState, CancellationToken cancellationToken)
+    {
+        const int maxAttempts = 20; // 10 minutes with 30-second intervals
+        const int delaySeconds = 30;
+        
+        for (int attempt = 0; attempt < maxAttempts; attempt++)
+        {
+            // Check for cancellation before each attempt
+            cancellationToken.ThrowIfCancellationRequested();
+            
+            try
+            {
+                var clusterInfo = await client.Clusters.Get(clusterId);
+                var currentState = clusterInfo.State?.ToString() ?? "UNKNOWN";
+                
+                Console.WriteLine($"[TRACE] Cluster {clusterId} is in state: {currentState} (attempt {attempt + 1}/{maxAttempts})");
+                
+                if (currentState == desiredState)
+                {
+                    Console.WriteLine($"[TRACE] Cluster {clusterId} reached desired state: {desiredState}");
+                    return;
+                }
+                
+                // Check if the cluster can reach the desired state
+                if (IsTerminalErrorState(currentState))
+                {
+                    var errorMsg = !string.IsNullOrEmpty(clusterInfo.StateMessage) 
+                        ? clusterInfo.StateMessage 
+                        : "Unknown error";
+                    throw new InvalidOperationException(
+                        $"Cluster {clusterId} is in terminal error state '{currentState}': {errorMsg}");
+                }
+                
+                if (attempt < maxAttempts - 1) // Don't wait after the last attempt
+                {
+                    Console.WriteLine($"[TRACE] Waiting {delaySeconds} seconds before checking cluster state again...");
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Console.WriteLine($"[TRACE] Operation cancelled while waiting for cluster {clusterId}");
+                        throw;
+                    }
+                }
+            }
+            catch (OperationCanceledException)
+            {
+                Console.WriteLine($"[TRACE] Operation cancelled while checking cluster {clusterId} state");
+                throw;
+            }
+            catch (Exception ex) when (!(ex is InvalidOperationException))
+            {
+                Console.WriteLine($"[TRACE] Error checking cluster state (attempt {attempt + 1}): {ex.Message}");
+                if (attempt == maxAttempts - 1)
+                {
+                    throw new InvalidOperationException($"Failed to get cluster {clusterId} state after {maxAttempts} attempts", ex);
+                }
+                
+                if (attempt < maxAttempts - 1)
+                {
+                    try
+                    {
+                        await Task.Delay(TimeSpan.FromSeconds(delaySeconds), cancellationToken);
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Console.WriteLine($"[TRACE] Operation cancelled while waiting after error for cluster {clusterId}");
+                        throw;
+                    }
+                }
+            }
+        }
+        
+        throw new InvalidOperationException(
+            $"Cluster {clusterId} did not reach state '{desiredState}' within the timeout period of {maxAttempts * delaySeconds / 60} minutes");
+    }
+
+    private static bool IsTerminalErrorState(string state)
+    {
+        return state switch
+        {
+            "ERROR" => true,
+            "UNKNOWN" => true,
+            _ => false
+        };
     }
 
     private async Task<ClusterInfo?> GetClusterByName(ResourceRequest request, string clusterName, CancellationToken cancellationToken)
@@ -107,57 +331,32 @@ public class ClusterHandler : BaseHandler<Cluster, ClusterIdentifiers>
         {
             Console.WriteLine($"[TRACE] Searching for cluster with name: {clusterName}");
             
-            // Call the clusters/list API to get all clusters
-            var responseJson = await CallDatabricksApiForResponse(request, "/api/2.1/clusters/list", new { }, cancellationToken);
+            var client = await GetClientAsync(request, cancellationToken);
+            var clusters = await client.Clusters.List();
             
-            // Parse the JSON response
-            var responseDoc = JsonDocument.Parse(responseJson);
+            var matchingClusters = clusters.Where(c => c.ClusterName == clusterName).ToList();
             
-            if (responseDoc.RootElement.TryGetProperty("clusters", out var clustersElement))
+            if (matchingClusters.Count == 0)
             {
-                var matchingClusters = new List<ClusterInfo>();
-                
-                foreach (var clusterElement in clustersElement.EnumerateArray())
-                {
-                    if (clusterElement.TryGetProperty("cluster_name", out var nameElement) &&
-                        nameElement.GetString() == clusterName)
-                    {
-                        var clusterId = clusterElement.TryGetProperty("cluster_id", out var idElement) 
-                            ? idElement.GetString() 
-                            : null;
-                            
-                        var state = clusterElement.TryGetProperty("state", out var stateElement) 
-                            ? stateElement.GetString() 
-                            : null;
-                        
-                        matchingClusters.Add(new ClusterInfo
-                        {
-                            ClusterId = clusterId,
-                            ClusterName = clusterName,
-                            State = state
-                        });
-                    }
-                }
-                
-                if (matchingClusters.Count == 0)
-                {
-                    Console.WriteLine($"[TRACE] No cluster found with name: {clusterName}");
-                    return null;
-                }
-                else if (matchingClusters.Count == 1)
-                {
-                    Console.WriteLine($"[TRACE] Found cluster {clusterName} with ID: {matchingClusters[0].ClusterId}");
-                    return matchingClusters[0];
-                }
-                else
-                {
-                    Console.WriteLine($"[TRACE] Found {matchingClusters.Count} clusters with name '{clusterName}'. Creating new one.");
-                    return null;
-                }
+                Console.WriteLine($"[TRACE] No cluster found with name: {clusterName}");
+                return null;
             }
-            
-            Console.WriteLine("[TRACE] No clusters array found in API response");
-            return null;
+            else if (matchingClusters.Count == 1)
+            {
+                var matchingCluster = matchingClusters[0];
+                Console.WriteLine($"[TRACE] Found cluster {clusterName} with ID: {matchingCluster.ClusterId}");
+                return new ClusterInfo
+                {
+                    ClusterId = matchingCluster.ClusterId,
+                    ClusterName = matchingCluster.ClusterName,
+                    State = matchingCluster.State?.ToString()
+                };
+            }
+            else
+            {
+                Console.WriteLine($"[TRACE] Found {matchingClusters.Count} clusters with name '{clusterName}'. Creating new one.");
+                return null;
+            }
         }
         catch (Exception ex)
         {

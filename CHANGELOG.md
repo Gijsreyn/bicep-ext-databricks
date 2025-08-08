@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.4] - 2025-08-08
+
+* Added new `RepoHandler` to create repository.
+
 ## [0.1.3] - 2025-08-07
 
 * Improved error handling on `ClusterHandler`.

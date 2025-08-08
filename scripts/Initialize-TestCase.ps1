@@ -90,6 +90,16 @@ function Initialize-TestCase {
                 Write-Verbose "Created output directory: $OutputPath"
             }
 
+            if ($fileToCopy -like "*bicepconfig.json*") {
+                $bicepConfig = Get-Content -Path $fileToCopy -Raw | ConvertFrom-Json
+
+                if ($bicepConfig.extensions.databricksExtension.StartsWith('./output/databricks-extension')) {
+                    $outputFolder = Join-Path (Split-Path $PSScriptRoot -Parent) 'output'
+                    Write-Verbose -Message "Copying item: $outputFolder"
+                    Copy-Item -Path $outputFolder -Destination $OutputPath -Recurse -Force
+                }   
+            }
+
             Copy-Item -Path $fileToCopy -Destination $OutputPath -Force -PassThru
         }
     }
