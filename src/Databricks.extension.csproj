@@ -17,5 +17,6 @@
   <ItemGroup>
     <PackageReference Include="Azure.Bicep.Local.Extension" Version="0.37.4" />
     <PackageReference Include="Azure.Identity" Version="1.14.2" />
+    <PackageReference Include="Microsoft.Azure.Databricks.Client" Version="2.9.0" />
   </ItemGroup>
 </Project>
