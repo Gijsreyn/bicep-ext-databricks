@@ -122,16 +122,14 @@ $projectPath = getProjectPath $ProjectName
 
 if ($Bootstrap.IsPresent)
 {
-    # dot-source the Setup-Environment script
-    $setupScriptPath = Join-Path $PSScriptRoot 'scripts' 'Setup-Environment.ps1'
-
-    . $setupScriptPath
-
-    Write-Verbose -Message "Bootstrapping environment by sourcing script '$setupScriptPath'. This can take a while..." -Verbose
-    $environment = Setup-Environment -ResourceGroupName $ResourceGroupName `
+    $result = New-AzDeployment -TemplateFile (Join-Path $PSScriptRoot 'infrastructure' 'main.bicep') `
+        -TemplateParameterFile (Join-Path $PSScriptRoot 'infrastructure' 'main.bicepparam.json') `
         -Location $Location `
-        -ContainerRegistryName $ContainerRegistryName `
-        -DatabricksWorkspaceName $DatabricksWorkspaceName
+    
+    $environment = @{
+        ContainerRegistryUrl = ([System.String]::Concat($result.Outputs.containerLoginServer.value, '.azurecr.io'))
+        WorkspaceUrl         = ('https://' + $result.Outputs.dbtWorkspaceUrl.value)
+    }
 }
 
 if ($Clean.IsPresent)
