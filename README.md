@@ -159,19 +159,20 @@ Each handler should have at least one example available in the `examples` direct
 These examples are also used for testing purposes. The following table represents
 the available examples from the particular released versions:
 
-| **Example name**            | **Description**                                 | **Available from** |
-| --------------------------- | ----------------------------------------------- | ------------------ |
-| [Create a directory][01]    | Creates a directory in a Databricks workspace   | v0.1.0 and above   |
-| [Create basic cluster][02]  | Deploys a basic cluster                         | v0.1.2 and above   |
-| [Create a repository][03]   | Create a repository in a Databricks workspace   | v0.1.5 and above   |
-| [Create Git credential][04] | Creates a new Git credential in Linked Accounts | v0.1.5 and above   |
+| **Example name**             | **Description**                                 | **Available from** |
+|------------------------------|-------------------------------------------------|--------------------|
+| [Create a directory][01]     | Creates a directory in a Databricks workspace   | v0.1.0 and above   |
+| [Create basic cluster][02]   | Deploys a basic cluster                         | v0.1.2 and above   |
+| [Create a repository][03]    | Create a repository in a Databricks workspace   | v0.1.5 and above   |
+| [Create Git credential][04]  | Creates a new Git credential in Linked Accounts | v0.1.5 and above   |
+| [Create a Unity Catalog][05] | Create a new Unity Catalog                      | v0.1.6 and above   |
 
 > [!NOTE]
 > Always make sure to use the latest version of the extension.
 
 ## Documentation
 
-Check out the [docs][05] section for more information around Databricks resources.
+Check out the [docs][06] section for more information around Databricks resources.
 
 ## Troubleshooting
 
@@ -185,7 +186,7 @@ $env:BICEP_TRACING_ENABLED = $true
 
 ## Contributing
 
-Want to contribute? Check out the [CONTRIBUTING.md][06] for more information.
+Want to contribute? Check out the [CONTRIBUTING.md][07] for more information.
 
 <!-- Link reference definitions -->
 [00]: CHANGELOG.md
@@ -193,5 +194,6 @@ Want to contribute? Check out the [CONTRIBUTING.md][06] for more information.
 [02]: ./examples/compute/cluster.basic.bicep
 [03]: ./examples/workspace/repo.basic.bicep
 [04]: ./examples/workspace/gitCredential.bicep
-[05]: ./docs/index.md
-[06]: CONTRIBUTING.md
+[05]: ./examples/catalog/catalog.basic.bicep
+[06]: ./docs/index.md
+[07]: CONTRIBUTING.md

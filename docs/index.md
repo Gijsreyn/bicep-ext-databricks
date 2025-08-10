@@ -15,7 +15,13 @@ The following list represent the available resources in the extension.
 
 **Workspace resources:**
 
-- Create a directory in a workspace
+- Create a [directory][04] in a workspace
+- Create a [Git Credential][05] in a workspace
+- Add a [Git repository][06] in the workspace
+
+**Unity resources:**
+
+- Create a new [Unity Catalog][07]
 
 ## `workspaceUrl` argument
 
@@ -69,3 +75,7 @@ set DATABRICKS_ACCESS_TOKEN=$token
 [01]: https://learn.microsoft.com/en-us/azure/databricks/introduction/
 [02]: databricks-extension.md
 [03]: ./resources/cluster.md
+[04]: ./resources/directory.md
+[05]: ./resources/gitCredential.md
+[06]: ./resources/repo.md
+[07]: ./resources/catalog.md

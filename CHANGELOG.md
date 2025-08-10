@@ -1,5 +1,9 @@
 # Changelog
 
+## [0.1.5] - 2025-08-10
+
+* Added new prerelease version for `CatalogHandler` to create a Unity Catalog.
+
 ## [0.1.5] - 2025-08-08
 
 * Added new `GitCredentialHander` to create a Git credential for repository.

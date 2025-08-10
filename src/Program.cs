@@ -4,6 +4,7 @@ using Microsoft.Extensions.DependencyInjection;
 using Bicep.Extension.Databricks;
 using Bicep.Extension.Databricks.Handlers.Compute;
 using Bicep.Extension.Databricks.Handlers.Workspace;
+using Bicep.Extension.Databricks.Handlers.UnityCatalog;
 
 var builder = WebApplication.CreateBuilder();
 
@@ -19,7 +20,8 @@ builder.Services
     .WithResourceHandler<DirectoryHandler>()
     .WithResourceHandler<RepoHandler>()
     .WithResourceHandler<GitCredentialHandler>()
-    .WithResourceHandler<ClusterHandler>();
+    .WithResourceHandler<ClusterHandler>()
+    .WithResourceHandler<CatalogHandler>();
 
 var app = builder.Build();
 
