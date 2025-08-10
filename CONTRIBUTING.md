@@ -1,5 +1,6 @@
 # Contributing to Bicep Databricks extension
 
+<!-- markdownlint-disable MD007 -->
 - [Contributing to Bicep Databricks extension](#contributing-to-bicep-databricks-extension)
   - [Contribution Workflow](#contribution-workflow)
   - [Changelog](#changelog)
