@@ -6,7 +6,7 @@
 
 ## [0.1.5] - 2025-08-08
 
-* Added new `GitCredentialHander` to create a Git credential for repository.
+* Added new `GitCredentialHandler` to create a Git credential for repository.
 
 ## [0.1.4] - 2025-08-08
 
@@ -27,7 +27,8 @@
 
 ### Added
 
-* Added `ClusterHandler` for managing Databricks clusters via the `Cluster` Bicep resource.
+* Added `ClusterHandler` for managing Databricks clusters via the `Cluster` Bicep
+  resource.
 
 ## [0.1.0] - 2025-08-05
 
@@ -35,4 +36,5 @@
 
 * Initial release.
 * Added `SecretHandler` for managing Databricks secrets via the `Secret` Bicep resource.
-* Added `WorkspaceHandler` for managing Databricks workspaces via the `Workspace` Bicep resource.
+* Added `WorkspaceHandler` for managing Databricks workspaces via the `Workspace`
+  Bicep resource.
