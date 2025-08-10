@@ -1,0 +1,6 @@
+acr
+avm
+bicepdatabricksstorage
+metastore
+sku
+tls
