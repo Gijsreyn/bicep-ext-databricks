@@ -1,21 +1,21 @@
 targetScope = 'subscription'
 
-param rgName string
+param resourceGroupName string
 param location string
 param storageName string
 param containerRegistryName string
 param workspaceName string
 
 module rg 'br/public:avm/res/resources/resource-group:0.4.1' = {
-  name: '${rgName}-${uniqueString(deployment().name, location)}'
+  name: '${resourceGroupName}-${uniqueString(deployment().name, location)}'
   params: {
-    name: rgName
+    name: resourceGroupName
     location: location
   }
 }
 
 module st 'br/public:avm/res/storage/storage-account:0.26.0' = {
-  scope: resourceGroup(rgName)
+  scope: resourceGroup(resourceGroupName)
   name: '${uniqueString(deployment().name, location)}-${storageName}'
   params: {
     name: storageName
@@ -41,8 +41,8 @@ module st 'br/public:avm/res/storage/storage-account:0.26.0' = {
 }
 
 module registry 'br/public:avm/res/container-registry/registry:0.9.1' = {
-  name: '${rgName}-${uniqueString(deployment().name, location)}-registry'
-  scope: resourceGroup(rgName)
+  name: '${resourceGroupName}-${uniqueString(deployment().name, location)}-registry'
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: containerRegistryName
     location: location
@@ -54,7 +54,7 @@ module registry 'br/public:avm/res/container-registry/registry:0.9.1' = {
 }
 
 module dbt 'br/public:avm/res/databricks/workspace:0.11.2' = {
-  scope: resourceGroup(rgName)
+  scope: resourceGroup(resourceGroupName)
   params: {
     name: workspaceName
     location: location

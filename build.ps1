@@ -10,16 +10,16 @@ param (
     $Configuration = "Debug",
 
     [string]
-    $ResourceGroupName = 'rg-pub-dbt-extension',
+    $resourceGroupName = 'rg-pub-dbt-extension',
 
     [string]
-    $Location = 'westeurope',
+    $location = 'westeurope',
 
     [string]
-    $ContainerRegistryName = "acrdbtextension",
+    $containerRegistryName = "acrdbtextension",
 
     [string]
-    $DatabricksWorkspaceName = 'dbt-pub-dbt-extension',
+    $databricksWorkspaceName = 'dbt-pub-dbt-extension',
 
     [switch]
     $Bootstrap,
@@ -122,13 +122,76 @@ $projectPath = getProjectPath $ProjectName
 
 if ($Bootstrap.IsPresent)
 {
-    $result = New-AzDeployment -TemplateFile (Join-Path $PSScriptRoot 'infrastructure' 'main.bicep') `
-        -TemplateParameterFile (Join-Path $PSScriptRoot 'infrastructure' 'main.bicepparam.json') `
-        -Location $Location `
+    $bicepFile = Join-Path $PSScriptRoot 'infrastructure' 'main.bicep'
+    $bicepParameterFile = Join-Path $PSScriptRoot 'infrastructure' 'main.bicepparam'
+
+    # Go through existing to see if user provided different parameters
+    $currentParameters = $PSBoundParameters
+    if ($currentParameters.ContainsKey('ResourceGroupName') -or $currentParameters.ContainsKey('Location') -or $currentParameters.ContainsKey('ContainerRegistryName') -or $currentParameters.ContainsKey('DatabricksWorkspaceName')){
+        $bicepExe = testBicepExe
+        if ($bicepExe) {
+            $randomFileName = [System.IO.Path]::GetRandomFileName()
+            $fileExtension = [System.IO.Path]::GetExtension($randomFileName)
+            $randomFileName = $randomFileName.Replace($fileExtension, '.json')
+            $tempJsonPath = Join-Path $env:TEMP $randomFileName
+
+            # Using outfile instead of stdout which has large outpus
+            & $bicepExe build-params (Join-Path $PSScriptRoot 'infrastructure' 'main.bicepparam') `
+                --outfile $tempJsonPath 
+
+            $existingParameters = Get-Content -Path $tempJsonPath -Raw | ConvertFrom-Json -AsHashtable
+
+            # Set new content
+            $setContent = $false
+            foreach ($key in $currentParameters.Keys) {
+                Write-Verbose "Processing parameter '$key' with value '$($currentParameters[$key])'"
+                if ($existingParameters.parameters.ContainsKey($key)) {
+                    Write-Verbose -Message "Parameter '$key' already exists with value '$($existingParameters.parameters[$key].value)'"
+                    if ($existingParameters.parameters[$key].value -ne $currentParameters[$key]) {
+                        $setContent = $true
+                        Write-Verbose "Updating parameter '$key' from '$($existingParameters.parameters[$key].value)' to '$($currentParameters[$key])'"
+                        $existingParameters.parameters[$key].value = $currentParameters[$key]
+                    }
+                }
+            }
+
+            if ($setContent) {
+                Write-Verbose "Updating parameters in '$tempJsonPath'"
+                Set-Content -Path $tempJsonPath -Value ($existingParameters | ConvertTo-Json -Depth 10) -Encoding UTF8 -Force
+
+                $randomFileName = [System.IO.Path]::GetRandomFileName()
+                $fileExtension = [System.IO.Path]::GetExtension($randomFileName)
+                $randomFileName = $randomFileName.Replace($fileExtension, '.bicepparam')
+                $tempBicepParameterFile = Join-Path (Split-Path $bicepParameterFile -Parent) $randomFileName
+                & $bicepExe decompile-params $tempJsonPath `
+                    --outfile $tempBicepParameterFile `
+                    --bicep-file $bicepFile
+                Write-Verbose "Decompiled parameters to '$tempBicepParameterFile'"
+
+                # Reset bicepParameterFile to the new file
+                $bicepParameterFile = $tempBicepParameterFile
+            }
+        }
+
+    }
+
+    $params = @{
+        TemplateFile = $bicepFile
+        TemplateParameterFile = $bicepParameterFile
+        Location = $location
+    }
+    
+    Write-Verbose "Deploying Bicep template with parameters:" -Verbose
+    Write-Verbose ($params | ConvertTo-Json | Out-String) -Verbose
+    $result = New-AzDeployment @params
     
     $environment = @{
         ContainerRegistryUrl = ([System.String]::Concat($result.Outputs.containerLoginServer.value, '.azurecr.io'))
         WorkspaceUrl         = ('https://' + $result.Outputs.dbtWorkspaceUrl.value)
+    }
+
+    if ($setContent) {
+        Remove-Item -Path $tempBicepParameterFile -Force -ErrorAction Ignore
     }
 }
 

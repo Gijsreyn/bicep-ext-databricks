@@ -1,6 +1,6 @@
 using 'main.bicep'
 
-param rgName = 'rg-pub-dbt-extension'
+param resourceGroupName = 'rg-pub-dbt-extension'
 param location = 'westeurope'
 param storageName = 'bicepdatabricksstorage'
 param containerRegistryName = 'acrdbtextension'
