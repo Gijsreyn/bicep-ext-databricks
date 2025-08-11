@@ -4,3 +4,4 @@ bicepdatabricksstorage
 metastore
 sku
 tls
+Decompiled

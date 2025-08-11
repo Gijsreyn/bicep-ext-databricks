@@ -135,7 +135,7 @@ if ($Bootstrap.IsPresent)
             $randomFileName = $randomFileName.Replace($fileExtension, '.json')
             $tempJsonPath = Join-Path $env:TEMP $randomFileName
 
-            # Using outfile instead of stdout which has large outpus
+            # Using outfile instead of stdout which has large output
             & $bicepExe build-params (Join-Path $PSScriptRoot 'infrastructure' 'main.bicepparam') `
                 --outfile $tempJsonPath 
 
