@@ -1,3 +1,4 @@
+using System.Text.Json.Serialization;
 using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
 
@@ -13,6 +14,7 @@ public class GitCredentialIdentifiers
 public class GitCredential : GitCredentialIdentifiers
 {
     [TypeProperty("The Git provider (gitHub, azureDevOpsServices, gitLab, bitbucketCloud, awsCodeCommit, etc.).", ObjectTypePropertyFlags.Required)]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
     public required string GitProvider { get; set; }
 
     [TypeProperty("The username for Git authentication.", ObjectTypePropertyFlags.Required)]

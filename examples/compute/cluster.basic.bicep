@@ -14,7 +14,6 @@ resource cluster 'Cluster' = {
     maxWorkers: 8
   }
   nodeTypeId: 'Standard_DS3_v2'
-
 }
 
 output clusterName string = cluster.clusterName

@@ -2,13 +2,15 @@ using Microsoft.AspNetCore.Builder;
 using Bicep.Local.Extension.Host.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Bicep.Extension.Databricks;
-using Bicep.Extension.Databricks.Handlers.Compute;
 using Bicep.Extension.Databricks.Handlers.Workspace;
+using Bicep.Extension.Databricks.Handlers.Compute;
 using Bicep.Extension.Databricks.Handlers.UnityCatalog;
+using Bicep.Extension.Databricks.Services;
 
 var builder = WebApplication.CreateBuilder();
 
 builder.AddBicepExtensionHost(args);
+// builder.Logging.SetMinimumLevel(LogLevel.Trace);
 builder.Services
     .AddBicepExtension(
         name: "DatabricksExtension",
@@ -16,15 +18,15 @@ builder.Services
         isSingleton: true,
         typeAssembly: typeof(Program).Assembly,
         configurationType: typeof(Configuration))
-    .WithResourceHandler<SecretHandler>()
     .WithResourceHandler<DirectoryHandler>()
     .WithResourceHandler<RepoHandler>()
+    .WithResourceHandler<SecretHandler>()
     .WithResourceHandler<GitCredentialHandler>()
     .WithResourceHandler<ClusterHandler>()
     .WithResourceHandler<CatalogHandler>();
 
+builder.Services.AddSingleton<IDatabricksClientFactory, DatabricksClientFactory>();
+
 var app = builder.Build();
-
 app.MapBicepExtension();
-
 await app.RunAsync();

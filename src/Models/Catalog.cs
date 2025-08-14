@@ -4,25 +4,6 @@ using Bicep.Local.Extension.Types.Attributes;
 
 namespace Bicep.Extension.Databricks;
 
-public enum CatalogType
-{
-    MANAGED_CATALOG = 0,
-    EXTERNAL_CATALOG = 1,
-    FOREIGN_CATALOG = 2
-}
-
-public enum IsolationMode
-{
-    OPEN = 0,
-    ISOLATED = 1
-}
-
-public enum CatalogSecurableKind
-{
-    CATALOG_STANDARD = 0,
-    CATALOG_FOREIGN = 1
-}
-
 public class KeyValuePair
 {
     [TypeProperty("The key name.", ObjectTypePropertyFlags.Required)]
@@ -66,12 +47,13 @@ public class Catalog : CatalogIdentifiers
     public KeyValuePair[]? Options { get; set; }
 
     [TypeProperty("Properties for the catalog as key-value pairs.", ObjectTypePropertyFlags.None)]
+    [JsonPropertyName("properties")]
     public KeyValuePair[]? Properties { get; set; }
 
-    [TypeProperty("Whether to enable predictive optimization.", ObjectTypePropertyFlags.None)]
+    [TypeProperty("Whether to enable predictive optimization.", ObjectTypePropertyFlags.ReadOnly)]
     public string? EnablePredictiveOptimization { get; set; }
 
-    [TypeProperty("Whether to force destroy the catalog.", ObjectTypePropertyFlags.None)]
+    [TypeProperty("Whether to force destroy the catalog.", ObjectTypePropertyFlags.ReadOnly)]
     public bool ForceDestroy { get; set; } = false;
 
     [TypeProperty("The owner of the catalog.", ObjectTypePropertyFlags.ReadOnly)]
@@ -100,7 +82,7 @@ public class Catalog : CatalogIdentifiers
 
     [TypeProperty("The type of the catalog.", ObjectTypePropertyFlags.ReadOnly)]
     [JsonPropertyName("catalog_type")]
-    public CatalogType? CatalogType { get; set; }
+    public string? CatalogType { get; set; }
 
     [TypeProperty("The storage location of the catalog.", ObjectTypePropertyFlags.ReadOnly)]
     [JsonPropertyName("storage_location")]
@@ -108,7 +90,7 @@ public class Catalog : CatalogIdentifiers
 
     [TypeProperty("The isolation mode of the catalog.", ObjectTypePropertyFlags.ReadOnly)]
     [JsonPropertyName("isolation_mode")]
-    public IsolationMode? IsolationMode { get; set; }
+    public string? IsolationMode { get; set; }
 
     [TypeProperty("The full name of the catalog.", ObjectTypePropertyFlags.ReadOnly)]
     [JsonPropertyName("full_name")]
@@ -116,7 +98,7 @@ public class Catalog : CatalogIdentifiers
 
     [TypeProperty("The securable kind of the catalog.", ObjectTypePropertyFlags.ReadOnly)]
     [JsonPropertyName("securable_kind")]
-    public CatalogSecurableKind? CatalogSecurableKind { get; set; }
+    public string? CatalogSecurableKind { get; set; }
 
     [TypeProperty("The securable type of the catalog.", ObjectTypePropertyFlags.ReadOnly)]
     [JsonPropertyName("securable_type")]

@@ -1,4 +1,5 @@
-using Bicep.Extension.Databricks.Handlers;
+using Microsoft.Extensions.Logging;
+using Bicep.Extension.Databricks.Services;
 using Microsoft.Azure.Databricks.Client.Models;
 using System.Text.Json;
 using System.Text.Json.Serialization;
@@ -7,159 +8,83 @@ namespace Bicep.Extension.Databricks.Handlers.UnityCatalog;
 
 public class CatalogHandler : BaseHandler<Catalog, CatalogIdentifiers>
 {
+    public CatalogHandler(IDatabricksClientFactory factory, ILogger<CatalogHandler> logger) : base(factory, logger) { }
+
     protected override async Task<ResourceResponse> CreateOrUpdate(ResourceRequest request, CancellationToken cancellationToken)
     {
-        var catalog = request.Properties;
-        var client = await GetClientAsync(request, cancellationToken);
-        
-        Console.WriteLine($"[TRACE] Creating/updating catalog: {catalog.Name}");
+        var desired = request.Properties;
+        var client = await GetClientAsync(request.Config.WorkspaceUrl, cancellationToken);
+        _logger.LogInformation("Ensuring catalog '{Name}'", desired.Name);
 
-        // Validate that storage_root, provider_name, share_name, and connection_name are mutually exclusive
-        var exclusiveFields = new[] { catalog.StorageRoot, catalog.ProviderName, catalog.ShareName, catalog.ConnectionName };
-        var nonNullCount = exclusiveFields.Count(field => !string.IsNullOrEmpty(field));
-        if (nonNullCount > 1)
-        {
+        var exclusive = new[] { desired.StorageRoot, desired.ProviderName, desired.ShareName, desired.ConnectionName };
+        if (exclusive.Count(f => !string.IsNullOrEmpty(f)) > 1)
             throw new InvalidOperationException("Only one of storage_root, provider_name, share_name, or connection_name can be specified");
-        }
 
-        // Check if catalog already exists
-        CatalogApiResponse? catalogInfo = null;
-        bool catalogExists = false;
-
+        CatalogApiResponse? info = null;
+        bool exists = false;
         try
         {
-            // Try to get existing catalog using the client API
-            var existingCatalog = await client.UnityCatalog.Catalogs.Get(catalog.Name, cancellationToken);
-            catalogInfo = ParseCatalogResponse(existingCatalog);
-            catalogExists = true;
-            Console.WriteLine($"[TRACE] Catalog '{catalog.Name}' already exists. Will update properties...");
+            var existing = await client.UnityCatalog.Catalogs.Get(desired.Name, cancellationToken);
+            info = ParseCatalogResponse(existing);
+            exists = true;
+            _logger.LogInformation("Catalog '{Name}' exists - updating", desired.Name);
         }
-        catch (Exception)
+        catch (Exception ex)
         {
-            // Catalog doesn't exist, will create new one
-            Console.WriteLine($"[TRACE] Catalog '{catalog.Name}' does not exist. Creating new catalog...");
+            _logger.LogDebug(ex, "Catalog '{Name}' not found - creating", desired.Name);
         }
 
-        if (!catalogExists)
+        if (!exists)
         {
-            // Create new catalog using the client API
-            var createRequest = new Microsoft.Azure.Databricks.Client.Models.UnityCatalog.CatalogAttributes
+            var createReq = new Microsoft.Azure.Databricks.Client.Models.UnityCatalog.CatalogAttributes
             {
-                Name = catalog.Name,
-                Comment = catalog.Comment,
-                StorageRoot = catalog.StorageRoot,
-                ConnectionName = catalog.ConnectionName,
-                ProviderName = catalog.ProviderName,
-                ShareName = catalog.ShareName
+                Name = desired.Name,
+                Comment = desired.Comment,
+                StorageRoot = desired.StorageRoot,
+                ConnectionName = desired.ConnectionName,
+                ProviderName = desired.ProviderName,
+                ShareName = desired.ShareName
             };
-
-            try
-            {
-                var createdCatalog = await client.UnityCatalog.Catalogs.Create(createRequest, cancellationToken);
-                catalogInfo = ParseCatalogResponse(createdCatalog);
-                Console.WriteLine($"[TRACE] Catalog created successfully: {catalog.Name}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERROR] Failed to create catalog: {ex.Message}");
-                throw;
-            }
+            info = ParseCatalogResponse(await client.UnityCatalog.Catalogs.Create(createReq, cancellationToken));
         }
         else
         {
-            // Update existing catalog using the client API
-            try
-            {
-                var updatedCatalog = await client.UnityCatalog.Catalogs.Update(catalog.Name, catalog.Comment ?? "", catalog.EnablePredictiveOptimization ?? "");
-                catalogInfo = ParseCatalogResponse(updatedCatalog);
-                Console.WriteLine($"[TRACE] Catalog updated successfully: {catalog.Name}");
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"[ERROR] Failed to update catalog: {ex.Message}");
-                throw;
-            }
+            info = ParseCatalogResponse(await client.UnityCatalog.Catalogs.Update(desired.Name, desired.Comment ?? string.Empty, desired.EnablePredictiveOptimization ?? string.Empty));
         }
 
-        return CreateResourceResponse(
-            catalogInfo,
-            "Catalog",
-            info => new CatalogIdentifiers { Name = info?.Name ?? string.Empty },
-            info => new Catalog
-            {
-                Name = info?.Name ?? string.Empty,
-                Comment = info?.Comment,
-                StorageRoot = info?.StorageRoot,
-                ConnectionName = info?.ConnectionName,
-                ProviderName = info?.ProviderName,
-                ShareName = info?.ShareName,
-                EnablePredictiveOptimization = info?.EnablePredictiveOptimization,
-                ForceDestroy = catalog.ForceDestroy,
-                
-                // Read-only properties from response
-                Owner = info?.Owner ?? string.Empty,
-                MetastoreId = info?.MetastoreId ?? string.Empty,
-                CreatedAt = info?.CreatedAt?.ToString(),
-                CreatedBy = info?.CreatedBy ?? string.Empty,
-                UpdatedAt = info?.UpdatedAt?.ToString(),
-                UpdatedBy = info?.UpdatedBy ?? string.Empty,
-                CatalogType = MapCatalogType(info?.CatalogType),
-                StorageLocation = info?.StorageLocation ?? string.Empty,
-                IsolationMode = MapIsolationMode(info?.IsolationMode),
-                FullName = info?.FullName ?? string.Empty,
-                CatalogSecurableKind = MapSecurableKind(info?.SecurableKind),
-                SecurableType = info?.SecurableType ?? "CATALOG",
-                ProvisioningInfo = info?.ProvisioningInfo != null ? new ProvisioningInfo
-                {
-                    State = info.ProvisioningInfo.State
-                } : null,
-                BrowseOnly = info?.BrowseOnly ?? false
-            }
-        );
+        if (info != null)
+        {
+            desired.Comment = info.Comment;
+            desired.StorageRoot = info.StorageRoot;
+            desired.ConnectionName = info.ConnectionName;
+            desired.ProviderName = info.ProviderName;
+            desired.ShareName = info.ShareName;
+            desired.EnablePredictiveOptimization = info.EnablePredictiveOptimization;
+            desired.Owner = info.Owner ?? string.Empty;
+            desired.MetastoreId = info.MetastoreId ?? string.Empty;
+            desired.CreatedAt = info.CreatedAt?.ToString();
+            desired.CreatedBy = info.CreatedBy ?? string.Empty;
+            desired.UpdatedAt = info.UpdatedAt?.ToString();
+            desired.UpdatedBy = info.UpdatedBy ?? string.Empty;
+            desired.CatalogType = info.CatalogType;
+            desired.StorageLocation = info.StorageLocation ?? string.Empty;
+            desired.IsolationMode = info.IsolationMode;
+            desired.FullName = info.FullName ?? string.Empty;
+            desired.CatalogSecurableKind = info.SecurableKind;
+            desired.SecurableType = info.SecurableType ?? "CATALOG";
+            desired.ProvisioningInfo = info.ProvisioningInfo != null ? new ProvisioningInfo { State = info.ProvisioningInfo.State } : null;
+            desired.BrowseOnly = info.BrowseOnly ?? false;
+        }
+
+        return GetResponse(request);
     }
 
-    protected override CatalogIdentifiers GetIdentifiers(Catalog properties)
-        => new()
-        {
-            Name = properties.Name,
-        };
+    protected override CatalogIdentifiers GetIdentifiers(Catalog properties) => new() { Name = properties.Name };
 
     private static CatalogApiResponse ParseCatalogResponse(object response)
     {
-        // Convert the dynamic response to our API response model
         var json = JsonSerializer.Serialize(response);
         return JsonSerializer.Deserialize<CatalogApiResponse>(json) ?? new CatalogApiResponse();
-    }
-
-    private static CatalogType? MapCatalogType(string? catalogType)
-    {
-        return catalogType?.ToUpperInvariant() switch
-        {
-            "MANAGED_CATALOG" => CatalogType.MANAGED_CATALOG,
-            "EXTERNAL_CATALOG" => CatalogType.EXTERNAL_CATALOG,
-            "FOREIGN_CATALOG" => CatalogType.FOREIGN_CATALOG,
-            _ => null
-        };
-    }
-
-    private static IsolationMode? MapIsolationMode(string? isolationMode)
-    {
-        return isolationMode?.ToUpperInvariant() switch
-        {
-            "OPEN" => IsolationMode.OPEN,
-            "ISOLATED" => IsolationMode.ISOLATED,
-            _ => null
-        };
-    }
-
-    private static CatalogSecurableKind? MapSecurableKind(string? securableKind)
-    {
-        return securableKind?.ToUpperInvariant() switch
-        {
-            "CATALOG_STANDARD" => CatalogSecurableKind.CATALOG_STANDARD,
-            "CATALOG_FOREIGN" => CatalogSecurableKind.CATALOG_FOREIGN,
-            _ => null
-        };
     }
 }
 public class CatalogApiResponse

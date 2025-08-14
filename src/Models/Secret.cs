@@ -15,9 +15,9 @@ public class SecretIdentifiers
 [ResourceType("Secret")]
 public class Secret : SecretIdentifiers
 {
-    [TypeProperty("The string value of the secret. Mutually exclusive with bytes_value.", ObjectTypePropertyFlags.WriteOnly)]
+    [TypeProperty("The string value of the secret. Mutually exclusive with bytes_value.", ObjectTypePropertyFlags.ReadOnly)]
     public string? StringValue { get; set; }
 
-    [TypeProperty("The bytes value of the secret. Mutually exclusive with string_value.", ObjectTypePropertyFlags.WriteOnly)]
+    [TypeProperty("The bytes value of the secret. Mutually exclusive with string_value.", ObjectTypePropertyFlags.ReadOnly)]
     public string? BytesValue { get; set; }
 }

@@ -16,7 +16,7 @@ BeforeAll {
     . (Join-Path $rootPath 'scripts' 'Initialize-TestCase.ps1')
 }
 
-Describe 'Workspace handler functionality' -Skip:(!$skip) {
+Describe 'Directory handler functionality' -Skip:(!$skip) {
     It "Should create a directory successfully" {
         $initTestCaseParams = @{
             Path            = (Join-Path $rootPath 'examples' 'workspace')

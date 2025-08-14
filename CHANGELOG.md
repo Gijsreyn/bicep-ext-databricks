@@ -1,6 +1,12 @@
 <!-- markdownlint-disable MD024 -->
 # Changelog
 
+## [0.1.7] - 2025-08-14
+
+### Changed
+
+- Restructured the whole solution to leverage interfaces.
+
 ## [0.1.6] - 2025-08-10
 
 ### Added

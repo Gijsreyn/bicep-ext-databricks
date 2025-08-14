@@ -16,8 +16,8 @@ BeforeAll {
     . (Join-Path $rootPath 'scripts' 'Initialize-TestCase.ps1')
 }
 
-Describe 'Cluster handler functionality' -Skip:(!$skip) {
-    It "Should create a cluster successfully" {
+Describe 'Repo handler functionality' -Skip:(!$skip) {
+    It "Should create a repository successfully" {
         $initTestCaseParams = @{
             Path            = (Join-Path $rootPath 'examples' 'workspace')
             OutputPath      = $testDrive

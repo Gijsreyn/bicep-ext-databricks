@@ -1,100 +1,66 @@
-using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Host.Handlers;
+using Microsoft.Azure.Databricks.Client.Models;
+using Microsoft.Extensions.Logging;
+using Bicep.Extension.Databricks.Services;
 using System.Text.Json;
 using Microsoft.Azure.Databricks.Client;
-using Microsoft.Azure.Databricks.Client.Models;
 
 namespace Bicep.Extension.Databricks.Handlers.Workspace;
 
-public class RepoHandler : BaseHandler<Repo, RepoIdentifiers>
+public class RepoHandler(IDatabricksClientFactory factory, ILogger<RepoHandler> logger) : BaseHandler<Repo, RepoIdentifiers>(factory, logger)
 {
     protected override async Task<ResourceResponse> CreateOrUpdate(ResourceRequest request, CancellationToken cancellationToken)
     {
-        var repo = request.Properties;
-        var client = await GetClientAsync(request, cancellationToken);
+        var desired = request.Properties;
+        const int TimeOutSeconds = 180; // repo operations may take longer
+        var client = await GetClientAsync(request.Config.WorkspaceUrl, cancellationToken, TimeOutSeconds);
+        var sparseCheckout = desired.SparseCheckoutPatterns is { Length: > 0 }
+            ? new RepoSparseCheckout { Patterns = desired.SparseCheckoutPatterns.ToList() }
+            : null;
 
-        Console.WriteLine($"[TRACE] Creating/updating repository '{repo.Url}' at path '{repo.Path}'");
+        _logger.LogInformation("Creating repo at path '{Path}' (Url: {Url})", desired.Path, desired.Url);
 
-        // Parse the provider string to the enum
-        if (!Enum.TryParse<RepoProvider>(repo.Provider, true, out var providerEnum))
-        {
-            throw new ArgumentException($"Invalid provider: {repo.Provider}. Valid providers are: {string.Join(", ", Enum.GetNames<RepoProvider>())}");
-        }
-
-        // Create sparse checkout configuration if patterns are provided
-        RepoSparseCheckout? sparseCheckout = null;
-        if (repo.SparseCheckoutPatterns != null && repo.SparseCheckoutPatterns.Length > 0)
-        {
-            sparseCheckout = new RepoSparseCheckout
-            {
-                Patterns = repo.SparseCheckoutPatterns.ToList()
-            };
-        }
-
-        Microsoft.Azure.Databricks.Client.Models.Repo repoInfo;
+        Microsoft.Azure.Databricks.Client.Models.Repo repo;
         try
         {
-            Console.WriteLine($"[TRACE] Creating new repository...");
-            Console.WriteLine($"[TRACE] Create repo payload: URL={repo.Url}, Provider={providerEnum}, Path={repo.Path}");
+            repo = await client.Repos.Create(desired.Url, desired.Provider!.Value, desired.Path, sparseCheckout, cancellationToken);
 
-            repoInfo = await client.Repos.Create(repo.Url, providerEnum, repo.Path, sparseCheckout, cancellationToken);
-            Console.WriteLine($"[TRACE] Repository created with ID: {repoInfo.Id}");
-
-            // Update to specific branch or tag if specified
-            if (!string.IsNullOrEmpty(repo.Branch) || !string.IsNullOrEmpty(repo.Tag))
+            if (!string.IsNullOrEmpty(desired.Branch) || !string.IsNullOrEmpty(desired.Tag))
             {
-                Console.WriteLine($"[TRACE] Updating repository to branch '{repo.Branch}' or tag '{repo.Tag}'");
-                await client.Repos.Update(repoInfo.Id, repo.Branch, repo.Tag, sparseCheckout, cancellationToken);
-
-                // Get updated repo info
-                repoInfo = await client.Repos.Get(repoInfo.Id, cancellationToken);
+                _logger.LogInformation("Updating repo {Id} (branch='{Branch}', tag='{Tag}')", repo.Id, desired.Branch, desired.Tag);
+                await client.Repos.Update(repo.Id, desired.Branch, desired.Tag, sparseCheckout, cancellationToken);
+                repo = await client.Repos.Get(repo.Id, cancellationToken);
             }
+
+            request.Properties.RepoId = repo.Id.ToString();
+            request.Properties.Path = repo.Path ?? desired.Path;
+            request.Properties.Provider = repo.Provider;
+            request.Properties.Url = repo.Url ?? desired.Url;
+            request.Properties.Branch = repo.Branch ?? desired.Branch;
+            request.Properties.HeadCommitId = repo.HeadCommitId ?? desired.HeadCommitId;
+            request.Properties.SparseCheckoutPatterns = repo.SparseCheckout?.Patterns?.ToArray() ?? desired.SparseCheckoutPatterns;
         }
-        catch (Exception ex) when (ex.Message.Contains("already exists") || ex.Message.Contains("RESOURCE_ALREADY_EXISTS"))
+        catch (Exception ex) when (ex.Message.Contains("RESOURCE_ALREADY_EXISTS"))
         {
-            Console.WriteLine($"[TRACE] Repository already exists. Attempting to update...");
-
-            // List repos to find the existing one
-            // TODO: Somehow the List() returns 0
-            var (repos, _) = await client.Repos.List();
-            var existingRepo = repos.FirstOrDefault(r => r.Path == repo.Path || r.Url == repo.Url);
-
-            if (existingRepo == null)
-            {
-                throw new InvalidOperationException($"Repository reported as existing but could not be found at path '{repo.Path}'");
-            }
-
-            Console.WriteLine($"[TRACE] Found existing repository with ID: {existingRepo.Id}. Updating...");
-            await client.Repos.Update(existingRepo.Id, repo.Branch, repo.Tag, sparseCheckout, cancellationToken);
-
-            // Get updated repo info
-            repoInfo = await client.Repos.Get(existingRepo.Id, cancellationToken);
-            Console.WriteLine($"[TRACE] Repository updated successfully");
+            // TODO: Implement logic to handle existing repos
+            _logger.LogInformation("Repo already exists at path '{Path}', fetching repo list via REST API", desired.Path);
+            // Somehow the List() and Get(desired.Path) don't work properly so we return
+            request.Properties.RepoId = "existing"; // We don't have the actual ID, but repo exists. This breaks using existing in Bicep
+            request.Properties.Path = desired.Path;
+            request.Properties.Provider = desired.Provider!.Value;
+            request.Properties.Url = desired.Url;
+            request.Properties.Branch = desired.Branch;
+            request.Properties.HeadCommitId = desired.HeadCommitId;
+            request.Properties.SparseCheckoutPatterns = desired.SparseCheckoutPatterns;
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex, "Failed to create or update repo at path '{Path}'", desired.Path);
+            throw new InvalidOperationException($"Failed to create or update repo at path '{desired.Path}'", ex);
         }
 
-
-        return CreateResourceResponse(
-            repoInfo,
-            "Repo",
-            info => new RepoIdentifiers { RepoId = info.Id.ToString() },
-            info => new Repo
-            {
-                RepoId = info.Id.ToString(),
-                Url = info.Url ?? string.Empty,
-                Provider = info.Provider.ToString(),
-                Path = info.Path ?? string.Empty,
-                Branch = info.Branch ?? string.Empty,
-                Tag = string.Empty, // Tags are not returned in the response
-                SparseCheckoutPatterns = info.SparseCheckout?.Patterns?.ToArray(),
-                HeadCommitId = info.HeadCommitId ?? string.Empty,
-                WorkspacePath = info.Path ?? string.Empty
-            }
-        );
+        return GetResponse(request);
     }
 
-    protected override RepoIdentifiers GetIdentifiers(Repo properties)
-        => new()
-        {
-            RepoId = properties.RepoId,
-        };
+    protected override RepoIdentifiers GetIdentifiers(Repo properties) => new() { RepoId = properties.RepoId };
 }

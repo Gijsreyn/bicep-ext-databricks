@@ -1,38 +1,38 @@
-using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
+using Azure.Bicep.Types.Concrete;
+using Microsoft.Azure.Databricks.Client.Models;
+using System.Text.Json.Serialization;
 
 namespace Bicep.Extension.Databricks;
-
-public class RepoIdentifiers
-{
-    [TypeProperty("The unique identifier of the repository.", ObjectTypePropertyFlags.Identifier)]
-    public string? RepoId { get; set; }
-}
 
 [ResourceType("Repo")]
 public class Repo : RepoIdentifiers
 {
-    [TypeProperty("The Git repository URL.", ObjectTypePropertyFlags.Required)]
+    [TypeProperty("Git provider (gitHub, bitbucketCloud, gitLab, azureDevOpsServices, gitHubEnterprise, bitbucketServer, gitLabEnterpriseEdition, awsCodeCommit).", ObjectTypePropertyFlags.Required)]
+    [JsonConverter(typeof(JsonStringEnumConverter))]
+    public required RepoProvider? Provider { get; set; }
+
+    [TypeProperty("Repository URL.", ObjectTypePropertyFlags.Required)]
     public required string Url { get; set; }
 
-    [TypeProperty("The Git provider (gitHub, azureDevOpsServices, gitLab, bitbucketCloud, awsCodeCommit).", ObjectTypePropertyFlags.Required)]
-    public required string Provider { get; set; }
-
-    [TypeProperty("The path in the Databricks workspace where the repository will be cloned.", ObjectTypePropertyFlags.None)]
+    [TypeProperty("Target path in workspace.")]
     public string? Path { get; set; }
 
-    [TypeProperty("The branch to check out.", ObjectTypePropertyFlags.None)]
+    [TypeProperty("Branch to check out.")]
     public string? Branch { get; set; }
 
-    [TypeProperty("The tag to check out.", ObjectTypePropertyFlags.None)]
+    [TypeProperty("Tag to check out (if branch not specified).")]
     public string? Tag { get; set; }
 
-    [TypeProperty("Patterns for sparse checkout.", ObjectTypePropertyFlags.None)]
+    [TypeProperty("Sparse checkout patterns.")]
     public string[]? SparseCheckoutPatterns { get; set; }
 
-    [TypeProperty("The commit hash of the current HEAD.", ObjectTypePropertyFlags.ReadOnly)]
-    public string HeadCommitId { get; set; } = string.Empty;
+    [TypeProperty("Head commit id.", ObjectTypePropertyFlags.ReadOnly)]
+    public string? HeadCommitId { get; set; }
+}
 
-    [TypeProperty("The workspace path of the repository.", ObjectTypePropertyFlags.ReadOnly)]
-    public string WorkspacePath { get; set; } = string.Empty;
+public class RepoIdentifiers
+{
+    [TypeProperty("Repo id.", ObjectTypePropertyFlags.Identifier | ObjectTypePropertyFlags.ReadOnly)]
+    public string? RepoId { get; set; }
 }

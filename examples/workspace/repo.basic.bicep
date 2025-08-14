@@ -11,8 +11,8 @@ extension databricksExtension with {
 }
 
 resource gitRepo 'Repo' = {
-  provider: 'GitHub'
-  url: 'https://github.com/Azure/bicep'
+  provider: 'gitHub'
+  url: 'https://github.com/Gijsreyn/bicep-ext-databricks'
   branch: 'main'
 }
 

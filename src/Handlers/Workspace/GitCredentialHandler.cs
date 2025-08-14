@@ -1,128 +1,79 @@
 using System.Text.Json;
+using System.Net.Http;
+using Microsoft.Extensions.Logging;
+using Bicep.Extension.Databricks.Services;
+using System.Text.Json.Serialization;
 
 namespace Bicep.Extension.Databricks.Handlers.Workspace;
 
 public class GitCredentialHandler : BaseHandler<GitCredential, GitCredentialIdentifiers>
 {
+    public GitCredentialHandler(IDatabricksClientFactory factory, ILogger<GitCredentialHandler> logger) : base(factory, logger) { }
+
     protected override async Task<ResourceResponse> CreateOrUpdate(ResourceRequest request, CancellationToken cancellationToken)
     {
-        var gitCredential = request.Properties;
+        const int TimeoutSeconds = 30;
+        var desired = request.Properties;
+        _logger.LogInformation("Ensuring git credential for provider {Provider} user {User}", desired.GitProvider, desired.GitUsername);
 
-        Console.WriteLine($"[TRACE] Creating/updating Git credential for provider '{gitCredential.GitProvider}' and username '{gitCredential.GitUsername}'");
+        var list = await CallDatabricksApiForResponse<GitCredentialListResponse>(request.Config.WorkspaceUrl, HttpMethod.Get, "2.0/git-credentials", cancellationToken, timeoutSeconds: TimeoutSeconds);
 
-        // First, list existing credentials to check if one already exists
-        Console.WriteLine($"[TRACE] Checking for existing Git credentials");
-        var listResponse = await CallDatabricksApiForResponse(request, "/api/2.0/git-credentials", new { }, cancellationToken);
-        
-        var existingCredentials = JsonSerializer.Deserialize<GitCredentialListResponse>(listResponse, new JsonSerializerOptions
+        var existing = list?.Credentials?.FirstOrDefault(c =>
+            (!string.IsNullOrEmpty(desired.Name) && c.Name == desired.Name) ||
+            (c.GitProvider == desired.GitProvider && c.GitUsername == desired.GitUsername));
+
+        GitCredentialResponse final; 
+        if (existing != null)
         {
-            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-        });
-
-        GitCredentialResponse? existingCredential = null;
-        if (existingCredentials?.Credentials != null)
-        {
-            // First try to find by name if provided
-            if (!string.IsNullOrEmpty(gitCredential.Name))
-            {
-                existingCredential = existingCredentials.Credentials.FirstOrDefault(c => 
-                    c.Name == gitCredential.Name);
-                Console.WriteLine($"[TRACE] Searched by name '{gitCredential.Name}': {(existingCredential != null ? $"Found credential ID {existingCredential.CredentialId}" : "Not found")}");
-            }
-            
-            // If not found by name, fallback to provider + username matching
-            if (existingCredential == null)
-            {
-                existingCredential = existingCredentials.Credentials.FirstOrDefault(c => 
-                    c.GitProvider == gitCredential.GitProvider && 
-                    c.GitUsername == gitCredential.GitUsername);
-                Console.WriteLine($"[TRACE] Searched by provider/username '{gitCredential.GitProvider}/{gitCredential.GitUsername}': {(existingCredential != null ? $"Found credential ID {existingCredential.CredentialId}" : "Not found")}");
-            }
-        }
-
-        GitCredentialResponse credentialInfo;
-        if (existingCredential != null)
-        {
-            Console.WriteLine($"[TRACE] Found existing Git credential with ID: {existingCredential.CredentialId}. Updating...");
-            
-            // Update the existing credential
+            _logger.LogInformation("Updating existing git credential {Id}", existing.CredentialId);
             var updatePayload = new
             {
-                credential_id = existingCredential.CredentialId,
-                git_username = gitCredential.GitUsername,
-                git_provider = gitCredential.GitProvider,
-                personal_access_token = gitCredential.PersonalAccessToken,
-                name = gitCredential.Name,
-                is_default_for_provider = gitCredential.IsDefaultForProvider
+                git_username = desired.GitUsername,
+                personal_access_token = desired.PersonalAccessToken,
+                git_provider = desired.GitProvider,
+                name = desired.Name,
+                is_default_for_provider = desired.IsDefaultForProvider
             };
-
-            var updateResponse = await CallDatabricksApiForResponse(request, "/api/2.0/git-credentials", updatePayload, cancellationToken);
-            credentialInfo = JsonSerializer.Deserialize<GitCredentialResponse>(updateResponse, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            }) ?? throw new InvalidOperationException("Failed to deserialize Git credential update response");
-            
-            Console.WriteLine($"[TRACE] Git credential updated successfully");
+            final = await CallDatabricksApiForResponse<GitCredentialResponse>(request.Config.WorkspaceUrl, HttpMethod.Patch, $"2.0/git-credentials/{existing.CredentialId}", cancellationToken, updatePayload, TimeoutSeconds)
+                ?? throw new InvalidOperationException("Null response updating git credential");
         }
         else
         {
-            Console.WriteLine($"[TRACE] No existing Git credential found. Creating new credential...");
-            
-            // Create new credential
+            _logger.LogInformation("Creating new git credential (provider {Provider} user {User})", desired.GitProvider, desired.GitUsername);
             var createPayload = new
             {
-                git_provider = gitCredential.GitProvider,
-                git_username = gitCredential.GitUsername,
-                personal_access_token = gitCredential.PersonalAccessToken,
-                name = gitCredential.Name,
-                is_default_for_provider = gitCredential.IsDefaultForProvider
+                git_provider = desired.GitProvider,
+                git_username = desired.GitUsername,
+                personal_access_token = desired.PersonalAccessToken,
+                name = desired.Name,
+                is_default_for_provider = desired.IsDefaultForProvider
             };
-
-            Console.WriteLine($"[TRACE] Create Git credential payload: Provider={gitCredential.GitProvider}, Username={gitCredential.GitUsername}, Name={gitCredential.Name}, IsDefault={gitCredential.IsDefaultForProvider}");
-
-            var createResponse = await CallDatabricksApiForResponse(request, "/api/2.0/git-credentials", createPayload, cancellationToken);
-            credentialInfo = JsonSerializer.Deserialize<GitCredentialResponse>(createResponse, new JsonSerializerOptions
-            {
-                PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-            }) ?? throw new InvalidOperationException("Failed to deserialize Git credential create response");
-            
-            Console.WriteLine($"[TRACE] Git credential created with ID: {credentialInfo.CredentialId}");
+            final = await CallDatabricksApiForResponse<GitCredentialResponse>(request.Config.WorkspaceUrl, HttpMethod.Post, "2.0/git-credentials", cancellationToken, createPayload, TimeoutSeconds)
+                ?? throw new InvalidOperationException("Null response creating git credential");
         }
 
-        return new ResourceResponse
-        {
-            Type = "GitCredential",
-            ApiVersion = "2.0",
-            Identifiers = new GitCredentialIdentifiers { CredentialId = credentialInfo.CredentialId.ToString() },
-            Properties = new GitCredential
-            {
-                CredentialId = credentialInfo.CredentialId.ToString(),
-                GitProvider = credentialInfo.GitProvider ?? string.Empty,
-                GitUsername = credentialInfo.GitUsername ?? string.Empty,
-                PersonalAccessToken = gitCredential.PersonalAccessToken, // Keep the input value as it's not returned
-                Name = credentialInfo.Name ?? gitCredential.Name,
-                IsDefaultForProvider = credentialInfo.IsDefaultForProvider
-            }
-        };
+        request.Properties.CredentialId = final.CredentialId.ToString();
+        request.Properties.GitProvider = final.GitProvider ?? desired.GitProvider;
+        request.Properties.GitUsername = final.GitUsername ?? desired.GitUsername;
+        request.Properties.Name = final.Name ?? desired.Name;
+        request.Properties.IsDefaultForProvider = final.IsDefaultForProvider;
+        request.Properties.PersonalAccessToken = final.PersonalAccessToken ?? desired.PersonalAccessToken;
+
+        return GetResponse(request);
     }
 
-    protected override GitCredentialIdentifiers GetIdentifiers(GitCredential properties)
-        => new()
-        {
-            CredentialId = properties.CredentialId ?? string.Empty,
-        };
+    protected override GitCredentialIdentifiers GetIdentifiers(GitCredential properties) => new() { CredentialId = properties.CredentialId ?? string.Empty };
 }
 
-public class GitCredentialListResponse
-{
-    public GitCredentialResponse[]? Credentials { get; set; }
-}
+public class GitCredentialListResponse { public GitCredentialResponse[]? Credentials { get; set; } }
 
+// 
 public class GitCredentialResponse
 {
-    public long CredentialId { get; set; }
-    public string? GitProvider { get; set; }
-    public string? GitUsername { get; set; }
+    [JsonPropertyName("credential_id")] public long CredentialId { get; set; }
+    [JsonPropertyName("git_provider")] public string? GitProvider { get; set; }
+    [JsonPropertyName("git_username")] public string? GitUsername { get; set; }
     public string? Name { get; set; }
-    public bool IsDefaultForProvider { get; set; }
+    [JsonPropertyName("is_default_for_provider")] public bool IsDefaultForProvider { get; set; }
+    [JsonPropertyName("personal_access_token")] public string? PersonalAccessToken { get; set; }
 }
