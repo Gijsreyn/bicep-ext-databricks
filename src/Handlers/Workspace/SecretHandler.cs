@@ -14,7 +14,7 @@ public class SecretHandler : BaseHandler<Secret, SecretIdentifiers>
         var desired = request.Properties;
         var client = await GetClientAsync(request.Config.WorkspaceUrl, cancellationToken);
 
-        _logger.LogInformation("Upserting secret {Scope}/{Key}", desired.Scope, desired.Key);
+        _logger.LogInformation("Setting secret {Scope}/{Key}", desired.Scope, desired.Key);
 
         if (!string.IsNullOrEmpty(desired.StringValue))
         {
