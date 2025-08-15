@@ -19,13 +19,15 @@ public class StorageCredential : StorageCredentialIdentifiers
     [JsonPropertyName("skip_validation")]
     public bool SkipValidation { get; set; } = false;
 
-    [TypeProperty("Azure Managed Identity configuration.", ObjectTypePropertyFlags.Required)]
-    [JsonPropertyName("azure_managed_identity")]
+    [TypeProperty("Azure Managed Identity configuration.")]
     public AzureManagedIdentity? AzureManagedIdentity { get; set; }
 
     [TypeProperty("Azure Service Principal configuration.")]
-    [JsonPropertyName("azure_service_principal")]
     public AzureServicePrincipal? AzureServicePrincipal { get; set; }
+
+    [TypeProperty("The identity of the storage credential.", ObjectTypePropertyFlags.ReadOnly)]
+    [JsonPropertyName("id")]
+    public string? Id { get; set; }
 
     [TypeProperty("The owner of the storage credential.", ObjectTypePropertyFlags.ReadOnly)]
     [JsonPropertyName("owner")]
@@ -52,7 +54,7 @@ public class StorageCredential : StorageCredentialIdentifiers
     public string? UpdatedBy { get; set; }
 
     [TypeProperty("Whether the storage credential is isolated.", ObjectTypePropertyFlags.ReadOnly)]
-    [JsonPropertyName("isolated")]
+    [JsonPropertyName("isolation_mode")]
     public bool Isolated { get; set; }
 
     [TypeProperty("The full name of the storage credential.", ObjectTypePropertyFlags.ReadOnly)]
@@ -74,25 +76,20 @@ public class StorageCredentialIdentifiers
 public class AzureManagedIdentity
 {
     [TypeProperty("The access connector ID for the managed identity.", ObjectTypePropertyFlags.Required)]
-    [JsonPropertyName("access_connector_id")]
     public required string AccessConnectorId { get; set; }
 
     [TypeProperty("The managed identity ID.")]
-    [JsonPropertyName("managed_identity_id")]
     public string? ManagedIdentityId { get; set; }
 }
 
 public class AzureServicePrincipal
 {
     [TypeProperty("The application ID of the service principal.", ObjectTypePropertyFlags.Required)]
-    [JsonPropertyName("application_id")]
     public required string ApplicationId { get; set; }
 
     [TypeProperty("The client secret of the service principal.", ObjectTypePropertyFlags.Required)]
-    [JsonPropertyName("client_secret")]
     public required string ClientSecret { get; set; }
 
     [TypeProperty("The directory (tenant) ID.", ObjectTypePropertyFlags.Required)]
-    [JsonPropertyName("directory_id")]
     public required string DirectoryId { get; set; }
 }

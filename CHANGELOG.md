@@ -1,6 +1,16 @@
 <!-- markdownlint-disable MD024 -->
 # Changelog
 
+## [0.1.8] - 2025-08-15
+
+### Added
+
+- Added new `StorageCredentialHandler` for Unity.
+
+### Fixed
+
+- Fixed the way how `StorageCredentialHandler` parsers object properties to JSON.
+
 ## [0.1.7] - 2025-08-14
 
 ### Changed

@@ -1,11 +1,8 @@
-targetScope = 'local'
+# Storage credential resource
 
-param workspaceUrl string
+This resource allows you to create a [Storage Credential][00] for Unity Catalog.
 
-extension databricksExtension with { 
-  workspaceUrl: workspaceUrl
-}
-
+```bicep
 resource storageCredential 'StorageCredential' = {
   name: 'storageCredential1'
   comment: 'My first storage credential'
@@ -13,5 +10,6 @@ resource storageCredential 'StorageCredential' = {
     accessConnectorId: '/subscriptions/<subscriptionId>/resourceGroups/<resourceGroupName>/providers/Microsoft.Databricks/accessConnectors/my-access-connector'
   }
 }
+```
 
-output storageCredentialId string = storageCredential.id
+[00]: https://docs.databricks.com/api/azure/workspace/storagecredentials/create

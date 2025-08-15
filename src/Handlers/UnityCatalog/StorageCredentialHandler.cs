@@ -16,15 +16,6 @@ public class StorageCredentialHandler : BaseHandler<StorageCredential, StorageCr
         var client = await GetClientAsync(request.Config.WorkspaceUrl, cancellationToken);
         _logger.LogInformation("Ensuring storage credential '{Name}' exists", desired.Name);
 
-        var desiredJson = JsonSerializer.Serialize(desired, new JsonSerializerOptions 
-        { 
-            WriteIndented = true,
-            DefaultIgnoreCondition = JsonIgnoreCondition.WhenWritingNull
-        });
-        _logger.LogInformation("Desired storage credential configuration: {DesiredConfig}", desiredJson);
-
-        _logger.LogInformation("The managed identity id is {ManagedIdentityId}", desired.AzureManagedIdentity?.ManagedIdentityId);
-        // Validate which authentication method is being used
         if (desired.AzureManagedIdentity != null)
         {
             if (string.IsNullOrEmpty(desired.AzureManagedIdentity.AccessConnectorId))
@@ -38,8 +29,8 @@ public class StorageCredentialHandler : BaseHandler<StorageCredential, StorageCr
                 throw new InvalidOperationException("ClientSecret is required when using AzureServicePrincipal authentication");
             if (string.IsNullOrEmpty(desired.AzureServicePrincipal.DirectoryId))
                 throw new InvalidOperationException("DirectoryId is required when using AzureServicePrincipal authentication");
-        } 
-        else 
+        }
+        else
         {
             throw new InvalidOperationException("Either AzureManagedIdentity or AzureServicePrincipal must be specified for authentication");
         }
@@ -55,7 +46,7 @@ public class StorageCredentialHandler : BaseHandler<StorageCredential, StorageCr
         }
         catch (Exception ex)
         {
-            _logger.LogDebug(ex, "Storage credential '{Name}' not found - creating", desired.Name);
+            _logger.LogInformation(ex, "Storage credential '{Name}' not found - creating", desired.Name);
         }
 
         if (!exists)
@@ -67,12 +58,9 @@ public class StorageCredentialHandler : BaseHandler<StorageCredential, StorageCr
                 ReadOnly = desired.ReadOnly
             };
 
-            _logger.LogInformation("The managed identity connector is {AccessConnectorId}", desired.AzureManagedIdentity?.AccessConnectorId);
-
             // Set authentication method
             if (desired.AzureManagedIdentity?.AccessConnectorId != null)
             {
-                _logger.LogInformation("Using Azure Managed Identity for storage credential '{Name}'", desired.Name);
                 createReq.AzureManagedIdentity = new Microsoft.Azure.Databricks.Client.Models.UnityCatalog.AzureManagedIdentity
                 {
                     AccessConnectorId = desired.AzureManagedIdentity.AccessConnectorId,
@@ -109,11 +97,11 @@ public class StorageCredentialHandler : BaseHandler<StorageCredential, StorageCr
             // Set authentication method for update
             if (desired.AzureManagedIdentity != null)
             {
-                // updateReq.AzureManagedIdentity = new Microsoft.Azure.Databricks.Client.Models.UnityCatalog.AzureManagedIdentity
-                // {
-                //     AccessConnectorId = desired.AzureManagedIdentity.AccessConnectorId,
-                //     ManagedIdentityId = desired.AzureManagedIdentity.ManagedIdentityId
-                // };
+                updateReq.AzureManagedIdentity = new Microsoft.Azure.Databricks.Client.Models.UnityCatalog.AzureManagedIdentity
+                {
+                    AccessConnectorId = desired.AzureManagedIdentity.AccessConnectorId,
+                    ManagedIdentityId = desired.AzureManagedIdentity.ManagedIdentityId
+                };
             }
             else if (desired.AzureServicePrincipal != null)
             {
@@ -133,6 +121,7 @@ public class StorageCredentialHandler : BaseHandler<StorageCredential, StorageCr
             desired.Comment = info.Comment;
             desired.ReadOnly = info.ReadOnly;
             desired.Owner = info.Owner ?? string.Empty;
+            desired.Id = info.Id ?? string.Empty;
             desired.MetastoreId = info.MetastoreId ?? string.Empty;
             desired.CreatedAt = info.CreatedAt;
             desired.CreatedBy = info.CreatedBy ?? string.Empty;
@@ -142,14 +131,13 @@ public class StorageCredentialHandler : BaseHandler<StorageCredential, StorageCr
             desired.FullName = info.FullName ?? string.Empty;
             desired.UsedForManagedStorage = info.UsedForManagedStorage;
 
-            // Map authentication details
             if (info.AzureManagedIdentity != null)
             {
-                // desired.AzureManagedIdentity = new AzureManagedIdentity
-                // {
-                //     AccessConnectorId = info.AzureManagedIdentity.AccessConnectorId,
-                //     ManagedIdentityId = info.AzureManagedIdentity.ManagedIdentityId
-                // };
+                desired.AzureManagedIdentity = new AzureManagedIdentity
+                {
+                    AccessConnectorId = info.AzureManagedIdentity.AccessConnectorId,
+                    ManagedIdentityId = info.AzureManagedIdentity.ManagedIdentityId
+                };
                 desired.AzureServicePrincipal = null;
             }
             else if (info.AzureServicePrincipal != null)
@@ -172,6 +160,17 @@ public class StorageCredentialHandler : BaseHandler<StorageCredential, StorageCr
     private static StorageCredential ParseStorageCredentialResponse(object response)
     {
         var json = JsonSerializer.Serialize(response);
-        return JsonSerializer.Deserialize<StorageCredential>(json) ?? new StorageCredential { Name = string.Empty };
+        // Translate expected snake_case keys from Databricks API to PascalCase for our model (auth blocks only)
+        json = json
+            .Replace("\"azure_managed_identity\"", "\"AzureManagedIdentity\"")
+            .Replace("\"azure_service_principal\"", "\"AzureServicePrincipal\"")
+            .Replace("\"access_connector_id\"", "\"AccessConnectorId\"")
+            .Replace("\"managed_identity_id\"", "\"ManagedIdentityId\"")
+            .Replace("\"application_id\"", "\"ApplicationId\"")
+            .Replace("\"client_secret\"", "\"ClientSecret\"")
+            .Replace("\"directory_id\"", "\"DirectoryId\"");
+        return JsonSerializer.Deserialize<StorageCredential>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true })
+            ?? new StorageCredential { Name = string.Empty };
     }
 }
+

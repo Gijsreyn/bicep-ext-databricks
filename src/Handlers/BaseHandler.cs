@@ -25,7 +25,7 @@ public abstract class BaseHandler<TResource, TIdentifiers> : TypedResourceHandle
 
     protected async Task<T?> CallDatabricksApiForResponse<T>(string workspaceUrl, HttpMethod method, string relativePath, CancellationToken ct, object? payload = null, int? timeoutSeconds = null)
     {
-        var response = await (_factory as IDatabricksClientFactory).CallApiAsync(workspaceUrl, method, relativePath, ct, payload, timeoutSeconds);
+        var response = await _factory.CallApiAsync(workspaceUrl, method, relativePath, ct, payload, timeoutSeconds);
         if (!response.IsSuccessStatusCode)
         {
             var body = await response.Content.ReadAsStringAsync(ct);
@@ -36,5 +36,4 @@ public abstract class BaseHandler<TResource, TIdentifiers> : TypedResourceHandle
         var json = await response.Content.ReadAsStringAsync(ct);
         return JsonSerializer.Deserialize<T>(json, new JsonSerializerOptions { PropertyNameCaseInsensitive = true });
     }
-
 }
