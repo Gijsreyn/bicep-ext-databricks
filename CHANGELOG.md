@@ -1,6 +1,12 @@
 <!-- markdownlint-disable MD024 -->
 # Changelog
 
+## [0.1.9] - 2025-08-15
+
+### Added
+
+- Added new `ExternalLocationHandler` to create new external locations.
+
 ## [0.1.8] - 2025-08-15
 
 ### Added

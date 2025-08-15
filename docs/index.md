@@ -23,6 +23,7 @@ The following list represent the available resources in the extension.
 
 - Create a new [Unity Catalog][07]
 - Create a [Storage Credential][08]
+- Create an [External Location][09]
 
 ## `workspaceUrl` argument
 
@@ -81,3 +82,4 @@ set DATABRICKS_ACCESS_TOKEN=$token
 [06]: ./resources/repo.md
 [07]: ./resources/catalog.md
 [08]: ./resources/storageCredential.md
+[09]: ./resources/externalLocation.md

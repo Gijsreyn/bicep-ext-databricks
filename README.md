@@ -167,13 +167,14 @@ the available examples from the particular released versions:
 | [Create Git credential][04]       | Creates a new Git credential in Linked Accounts | v0.1.5 and above   |
 | [Create a Unity Catalog][05]      | Create a new Unity Catalog                      | v0.1.6 and above   |
 | [Create a Storage Credential][06] | Create a Storage Credential                     | v0.1.8 and above   |
+| [Create an External Location][07]   | Create an External Location                     | v0.1.9 and above   |
 
 > [!NOTE]
 > Always make sure to use the latest version of the extension.
 
 ## Documentation
 
-Check out the [docs][07] section for more information around Databricks resources.
+Check out the [docs][08] section for more information around Databricks resources.
 
 ## Troubleshooting
 
@@ -187,7 +188,7 @@ $env:BICEP_TRACING_ENABLED = $true
 
 ## Contributing
 
-Want to contribute? Check out the [CONTRIBUTING.md][08] for more information.
+Want to contribute? Check out the [CONTRIBUTING.md][09] for more information.
 
 <!-- Link reference definitions -->
 [00]: CHANGELOG.md
@@ -197,5 +198,6 @@ Want to contribute? Check out the [CONTRIBUTING.md][08] for more information.
 [04]: ./examples/workspace/gitCredential.bicep
 [05]: ./examples/unity/catalog.basic.bicep
 [06]: ./examples/unity/catalog.basic.bicep
-[07]: ./docs/index.md
-[08]: CONTRIBUTING.md
+[07]: ./examples/unity/externalLocation.basic.bicep
+[08]: ./docs/index.md
+[09]: CONTRIBUTING.md

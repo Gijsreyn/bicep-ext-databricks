@@ -24,7 +24,8 @@ builder.Services
     .WithResourceHandler<GitCredentialHandler>()
     .WithResourceHandler<ClusterHandler>()
     .WithResourceHandler<CatalogHandler>()
-    .WithResourceHandler<StorageCredentialHandler>();
+    .WithResourceHandler<StorageCredentialHandler>()
+    .WithResourceHandler<ExternalLocationHandler>();
 
 builder.Services.AddSingleton<IDatabricksClientFactory, DatabricksClientFactory>();
 
