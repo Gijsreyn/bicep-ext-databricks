@@ -9,4 +9,9 @@ Acqu
 Gijsreyn
 IDatabricks
 ILogger
+abfss
+dfs
+Linq
+mycontainer
+mystorageaccount
 
