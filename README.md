@@ -194,6 +194,6 @@ Want to contribute? Check out the [CONTRIBUTING.md][07] for more information.
 [02]: ./examples/compute/cluster.basic.bicep
 [03]: ./examples/workspace/repo.basic.bicep
 [04]: ./examples/workspace/gitCredential.bicep
-[05]: ./examples/catalog/catalog.basic.bicep
+[05]: ./examples/unity/catalog.basic.bicep
 [06]: ./docs/index.md
 [07]: CONTRIBUTING.md

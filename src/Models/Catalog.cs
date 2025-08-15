@@ -16,6 +16,7 @@ public class KeyValuePair
 public class CatalogIdentifiers
 {
     [TypeProperty("The name of the catalog.", ObjectTypePropertyFlags.Identifier)]
+    [JsonPropertyName("name")]
     public string Name { get; set; } = string.Empty;
 }
 
@@ -29,18 +30,23 @@ public record ProvisioningInfo
 public class Catalog : CatalogIdentifiers
 {
     [TypeProperty("The comment/description for the catalog.", ObjectTypePropertyFlags.None)]
+    [JsonPropertyName("comment")]
     public string? Comment { get; set; }
 
     [TypeProperty("Storage root path for managed tables within catalog.", ObjectTypePropertyFlags.None)]
+    [JsonPropertyName("storage_root")]
     public string? StorageRoot { get; set; }
 
     [TypeProperty("The name of the connection for foreign catalogs.", ObjectTypePropertyFlags.None)]
+    [JsonPropertyName("connection_name")]
     public string? ConnectionName { get; set; }
 
     [TypeProperty("Delta sharing provider name for foreign catalogs.", ObjectTypePropertyFlags.None)]
+    [JsonPropertyName("provider_name")]
     public string? ProviderName { get; set; }
 
     [TypeProperty("Delta sharing share name for foreign catalogs.", ObjectTypePropertyFlags.None)]
+    [JsonPropertyName("share_name")]
     public string? ShareName { get; set; }
 
     [TypeProperty("Options for the catalog as key-value pairs.", ObjectTypePropertyFlags.None)]
@@ -51,6 +57,7 @@ public class Catalog : CatalogIdentifiers
     public KeyValuePair[]? Properties { get; set; }
 
     [TypeProperty("Whether to enable predictive optimization.", ObjectTypePropertyFlags.ReadOnly)]
+    [JsonPropertyName("enable_predictive_optimization")]
     public string? EnablePredictiveOptimization { get; set; }
 
     [TypeProperty("Whether to force destroy the catalog.", ObjectTypePropertyFlags.ReadOnly)]

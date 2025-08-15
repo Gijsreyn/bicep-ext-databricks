@@ -23,7 +23,8 @@ builder.Services
     .WithResourceHandler<SecretHandler>()
     .WithResourceHandler<GitCredentialHandler>()
     .WithResourceHandler<ClusterHandler>()
-    .WithResourceHandler<CatalogHandler>();
+    .WithResourceHandler<CatalogHandler>()
+    .WithResourceHandler<StorageCredentialHandler>();
 
 builder.Services.AddSingleton<IDatabricksClientFactory, DatabricksClientFactory>();
 
