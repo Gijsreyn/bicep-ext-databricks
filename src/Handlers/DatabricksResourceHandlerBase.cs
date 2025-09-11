@@ -6,8 +6,9 @@ using Bicep.Local.Extension.Host.Handlers;
 using Azure.Identity;
 using Azure.Core;
 using Microsoft.Extensions.Logging;
+using Databricks.Models;
 
-namespace Bicep.Extension.Databricks.Handlers;
+namespace Databricks.Handlers;
 
 public abstract class DatabricksResourceHandlerBase<TProps, TIdentifiers>
     : TypedResourceHandler<TProps, TIdentifiers, Configuration>
@@ -44,7 +45,7 @@ public abstract class DatabricksResourceHandlerBase<TProps, TIdentifiers>
         {
             var credential = DefaultDatabricksCredential.Instance;
             // Databricks Azure resource ID: 2ff814a6-3304-4ab8-85cb-cd0e6f879c1d
-            var token = credential.GetToken(new TokenRequestContext(new[] { "2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default" }));
+            var token = credential.GetToken(new TokenRequestContext(["2ff814a6-3304-4ab8-85cb-cd0e6f879c1d/.default"]));
             if (string.IsNullOrWhiteSpace(token.Token))
             {
                 throw new InvalidOperationException("Empty Azure Entra access token returned for Databricks scope.");

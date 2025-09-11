@@ -1,7 +1,7 @@
 using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
 
-namespace Bicep.Extension.Databricks;
+namespace Databricks.Models;
 
 public class Configuration
 {

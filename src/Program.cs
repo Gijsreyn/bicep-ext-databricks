@@ -1,8 +1,8 @@
 using Microsoft.AspNetCore.Builder;
 using Bicep.Local.Extension.Host.Extensions;
 using Microsoft.Extensions.DependencyInjection;
-using Bicep.Extension.Databricks;
-using Bicep.Extension.Databricks.Handlers;
+using Databricks.Models;
+using Databricks.Handlers;
 
 var builder = WebApplication.CreateBuilder();
 
