@@ -11,7 +11,7 @@
     "currentProfile": "AzureCloud"
   },
   "extensions": {
-    "databricksExtension": "br:acrdbtextension.azurecr.io/extension/databricks:v0.1.9"
+    "databricksExtension": "./output/databricks-extension"
   },
   "implicitExtensions": []
 }
