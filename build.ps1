@@ -362,9 +362,22 @@ if ($Configuration -eq 'Release')
                 'test',
                 "$ProjectName.sln",
                 '-c', $Configuration,
-                '--verbosity', 'normal',
-                '--logger:junit'
+                '--verbosity', 'normal'
             )
+
+            if ($env:GITHUB_ACTIONS -eq 'true')
+            {
+                Write-Verbose "Running test in GitHub actions"
+                $testParams += @(
+                    "--logger", "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true"
+                )
+            }
+            else 
+            {
+                $testParams += @(
+                    "--logger:junit"
+                )
+            }
 
             Write-Verbose "Running tests for '$ProjectName' with" -Verbose
             Write-Verbose ($testParams | ConvertTo-Json | Out-String) -Verbose
