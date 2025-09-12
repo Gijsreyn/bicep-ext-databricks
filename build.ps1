@@ -292,31 +292,35 @@ if ($Configuration -eq 'Release')
         }
     }
 
+    if ($env:GITHUB_ACTIONS -ne $true)
+    {
+        $changeLog = Get-ChangelogData -Path (Join-Path $PSScriptRoot 'CHANGELOG.md') -ErrorAction Stop
+        $version = $changeLog.LastVersion
+
+
+        if ([string]::IsNullOrEmpty($environment))
+        {
+            $dbtInstance = Get-AzDatabricksWorkspace -ResourceGroupName $ResourceGroupName -Name $DatabricksWorkspaceName -ErrorAction Ignore
+
+            if (-not $dbtInstance)
+            {
+                throw "Databricks workspace '$DatabricksWorkspaceName' not found in resource group '$ResourceGroupName'. Please ensure the environment is bootstrapped."
+            }
+
+            $environment = @{ 
+                ContainerRegistryUrl = ([System.String]::Concat($ContainerRegistryName, '.azurecr.io'))
+                WorkspaceUrl         = ('https://' + $dbtInstance.Url)
+            }
+        }
+
+        $bicepRegistryUrl = [System.String]::Concat('br:', $environment.ContainerRegistryUrl, '/extension/', 'databricks', ':v', $version)
+    }
+
     if ($Publish.IsPresent)
     {
         $containerParams = $extensionParams
         $containerParams += @('--target', $bicepRegistryUrl)
     }
-
-    $changeLog = Get-ChangelogData -Path (Join-Path $PSScriptRoot 'CHANGELOG.md') -ErrorAction Stop
-    $version = $changeLog.LastVersion
-
-    if ([string]::IsNullOrEmpty($environment))
-    {
-        $dbtInstance = Get-AzDatabricksWorkspace -ResourceGroupName $ResourceGroupName -Name $DatabricksWorkspaceName -ErrorAction Ignore
-
-        if (-not $dbtInstance)
-        {
-            throw "Databricks workspace '$DatabricksWorkspaceName' not found in resource group '$ResourceGroupName'. Please ensure the environment is bootstrapped."
-        }
-
-        $environment = @{ 
-            ContainerRegistryUrl = ([System.String]::Concat($ContainerRegistryName, '.azurecr.io'))
-            WorkspaceUrl         = ('https://' + $dbtInstance.Url)
-        }
-    }
-
-    $bicepRegistryUrl = [System.String]::Concat('br:', $environment.ContainerRegistryUrl, '/extension/', 'databricks', ':v', $version)
 
     $extensionParams += @(
         '--target', $targetName,
@@ -370,7 +374,7 @@ if ($Configuration -eq 'Release')
             )
             
             # Add additional logging for CI environments
-            if ($env:GITHUB_ACTIONS -eq 'true')
+            if ($env:GITHUB_ACTIONS -eq $true)
             {
                 $testParams += @(
                     '--logger', 'GitHubActions',
