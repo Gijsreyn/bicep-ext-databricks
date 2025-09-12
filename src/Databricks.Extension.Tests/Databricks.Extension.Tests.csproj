@@ -24,6 +24,7 @@
     <PackageReference Include="Moq" Version="4.20.72" />
     <PackageReference Include="FluentAssertions" Version="7.2.0" /> <!-- Downgraded from 8.6.0 to 7.2.0 to avoid license warning issues -->
     <PackageReference Include="Microsoft.Extensions.Diagnostics.Testing" Version="9.9.0" />
+    <PackageReference Include="JunitXml.TestLogger" Version="6.1.0" />
   </ItemGroup>
 
   <ItemGroup>
