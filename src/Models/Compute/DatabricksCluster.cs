@@ -1,7 +1,7 @@
 using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
 
-namespace Databricks.Models;
+namespace Databricks.Models.Compute;
 
 [ResourceType("Cluster")]
 public class Cluster : ClusterIdentifiers

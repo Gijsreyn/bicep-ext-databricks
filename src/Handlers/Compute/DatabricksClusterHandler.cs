@@ -1,10 +1,10 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using DatabricksCluster = Databricks.Models.Cluster;
-using DatabricksClusterIdentifiers = Databricks.Models.ClusterIdentifiers;
+using DatabricksCluster = Databricks.Models.Compute.Cluster;
+using DatabricksClusterIdentifiers = Databricks.Models.Compute.ClusterIdentifiers;
 using Configuration = Databricks.Models.Configuration;
 
-namespace Databricks.Handlers;
+namespace Databricks.Handlers.Compute;
 
 public class DatabricksClusterHandler : DatabricksResourceHandlerBase<DatabricksCluster, DatabricksClusterIdentifiers>
 {

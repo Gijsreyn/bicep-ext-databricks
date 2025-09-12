@@ -1,10 +1,10 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using DatabricksSecret = Databricks.Models.Secret;
-using DatabricksSecretIdentifiers = Databricks.Models.SecretIdentifiers;
+using DatabricksSecret = Databricks.Models.Workspace.Secret;
+using DatabricksSecretIdentifiers = Databricks.Models.Workspace.SecretIdentifiers;
 using Configuration = Databricks.Models.Configuration;
 
-namespace Databricks.Handlers;
+namespace Databricks.Handlers.Workspace;
 
 public class DatabricksSecretHandler : DatabricksResourceHandlerBase<DatabricksSecret, DatabricksSecretIdentifiers>
 {

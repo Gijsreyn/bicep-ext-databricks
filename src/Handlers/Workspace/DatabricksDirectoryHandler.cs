@@ -1,10 +1,10 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using DatabricksDirectory = Databricks.Models.Directory;
-using DatabricksDirectoryIdentifiers = Databricks.Models.DirectoryIdentifiers;
+using DatabricksDirectory = Databricks.Models.Workspace.Directory;
+using DatabricksDirectoryIdentifiers = Databricks.Models.Workspace.DirectoryIdentifiers;
 using Configuration = Databricks.Models.Configuration;
 
-namespace Databricks.Handlers;
+namespace Databricks.Handlers.Workspace;
 
 public class DatabricksDirectoryHandler : DatabricksResourceHandlerBase<DatabricksDirectory, DatabricksDirectoryIdentifiers>
 {

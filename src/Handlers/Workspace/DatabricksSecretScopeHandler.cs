@@ -1,11 +1,11 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
-using DatabricksSecretScope = Databricks.Models.SecretScope;
-using DatabricksSecretScopeIdentifiers = Databricks.Models.SecretScopeIdentifiers;
+using DatabricksSecretScope = Databricks.Models.Workspace.SecretScope;
+using DatabricksSecretScopeIdentifiers = Databricks.Models.Workspace.SecretScopeIdentifiers;
 using Configuration = Databricks.Models.Configuration;
-using Databricks.Models;
+using Databricks.Models.Workspace;
 
-namespace Databricks.Handlers;
+namespace Databricks.Handlers.Workspace;
 
 public class DatabricksSecretScopeHandler : DatabricksResourceHandlerBase<DatabricksSecretScope, DatabricksSecretScopeIdentifiers>
 {
@@ -152,7 +152,7 @@ public class DatabricksSecretScopeHandler : DatabricksResourceHandlerBase<Databr
         {
             if (props.KeyVaultMetadata == null)
             {
-                props.KeyVaultMetadata = new Models.AzureKeyVaultMetadata();
+                props.KeyVaultMetadata = new AzureKeyVaultMetadata();
             }
             
             props.KeyVaultMetadata.ResourceId = scope.keyvault_metadata.resource_id ?? props.KeyVaultMetadata.ResourceId;

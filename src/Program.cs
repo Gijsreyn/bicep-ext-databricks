@@ -4,7 +4,9 @@ using Microsoft.Extensions.DependencyInjection;
 using Databricks.Models;
 using Databricks.Models.UnityCatalog;
 using Databricks.Handlers;
+using Databricks.Handlers.Compute;
 using Databricks.Handlers.UnityCatalog;
+using Databricks.Handlers.Workspace;
 
 var builder = WebApplication.CreateBuilder();
 

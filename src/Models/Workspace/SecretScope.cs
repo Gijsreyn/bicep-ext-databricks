@@ -2,7 +2,7 @@ using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
 using System.Text.Json.Serialization;
 
-namespace Databricks.Models;
+namespace Databricks.Models.Workspace;
 
 [JsonConverter(typeof(JsonStringEnumConverter))]
 public enum SecretScopeBackendType

@@ -1,8 +1,9 @@
 using System.Text.Json;
 using Microsoft.Extensions.Logging;
 using Databricks.Models;
+using Databricks.Models.Workspace;
 
-namespace Databricks.Handlers;
+namespace Databricks.Handlers.Workspace;
 
 public class DatabricksRepositoryHandler : DatabricksResourceHandlerBase<Repository, RepositoryIdentifiers>
 {

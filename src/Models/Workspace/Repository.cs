@@ -2,7 +2,7 @@ using System.Text.Json.Serialization;
 using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
 
-namespace Databricks.Models;
+namespace Databricks.Models.Workspace;
 
 public enum RepoProvider
 {

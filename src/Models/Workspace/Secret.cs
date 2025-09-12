@@ -1,7 +1,7 @@
 using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
 
-namespace Databricks.Models;
+namespace Databricks.Models.Workspace;
 
 [ResourceType("Secret")]
 public class Secret : SecretIdentifiers
