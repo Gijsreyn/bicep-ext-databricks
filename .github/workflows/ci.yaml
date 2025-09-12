@@ -39,12 +39,4 @@ jobs:
       with:
         name: test-results
         path: |
-          TestResults/*.xml
-          
-    - name: Upload build artifacts
-      uses: actions/upload-artifact@v4
-      if: success()
-      with:
-        name: build-artifacts
-        path: |
-          output/*
+          src/**/TestResults/*.xml
