@@ -37,26 +37,32 @@ public class DatabricksRepositoryHandler : DatabricksResourceHandlerBase<Reposit
         
         _logger.LogInformation("Ensuring repository for provider {Provider} url {Url}", props.Provider, props.Url);
 
+        // If no path is provided, warn that updates won't be possible
+        if (string.IsNullOrWhiteSpace(props.Path))
+        {
+            _logger.LogWarning("No path provided for repository. If the repository already exists, you must provide the 'path' property to enable updates.");
+        }
+
         var existing = await GetRepositoryAsync(request.Config, props, cancellationToken);
 
         if (existing is null)
         {
-            _logger.LogInformation("Creating new repository (provider {Provider} url {Url})", props.Provider, props.Url);
-            var createdRepoId = await CreateRepositoryAsync(request.Config, props, cancellationToken);
-            existing = await GetRepositoryByIdAsync(request.Config, createdRepoId, cancellationToken)
-                ?? throw new InvalidOperationException("Repository creation did not return repository.");
+            var pathLog = string.IsNullOrWhiteSpace(props.Path) ? "" : $" path {props.Path}";
+            _logger.LogInformation("Creating new repository (provider {Provider} url {Url}{PathLog})", props.Provider, props.Url, pathLog);
+            existing = await CreateRepositoryAsync(request.Config, props, cancellationToken);
         }
         else
         {
-            _logger.LogInformation("Updating existing repository {Id}", (string)existing.id);
+            _logger.LogInformation("Updating existing repository {Id} at path {Path}", (string)existing.id, (string)existing.path);
             await UpdateRepositoryAsync(request.Config, props, existing, cancellationToken);
-            existing = await GetRepositoryByIdAsync(request.Config, (string)existing.id, cancellationToken)
+            existing = await GetRepositoryAsync(request.Config, props, cancellationToken)
                 ?? throw new InvalidOperationException("Repository update did not return repository.");
         }
 
         props.Id = existing.id;
         props.HeadCommitId = existing.head_commit_id;
         props.Branch = existing.branch;
+        props.Path = existing.path; // Set the actual path from the repository
         if (existing.sparse_checkout?.patterns != null)
         {
             props.SparseCheckout = new SparseCheckout
@@ -79,7 +85,12 @@ public class DatabricksRepositoryHandler : DatabricksResourceHandlerBase<Reposit
     {
         try
         {
-            var response = await CallDatabricksApiForResponse<JsonElement>(configuration.WorkspaceUrl, HttpMethod.Get, ReposApiEndpoint, ct);
+            // Use path_prefix query parameter only if path is provided for efficient filtering
+            var endpoint = string.IsNullOrWhiteSpace(props.Path) 
+                ? ReposApiEndpoint 
+                : $"{ReposApiEndpoint}?path_prefix={Uri.EscapeDataString(props.Path)}";
+                
+            var response = await CallDatabricksApiForResponse<JsonElement>(configuration.WorkspaceUrl, HttpMethod.Get, endpoint, ct);
             
             if (!response.TryGetProperty("repos", out var reposArray))
                 return null;
@@ -90,30 +101,15 @@ public class DatabricksRepositoryHandler : DatabricksResourceHandlerBase<Reposit
                 var url = repo.TryGetProperty("url", out var urlProp) ? urlProp.GetString() : null;
                 var path = repo.TryGetProperty("path", out var pathProp) ? pathProp.GetString() : null;
                 
+                // Match on provider and URL
+                // If path is provided in props, also match on exact path
                 if (provider == props.Provider.ToString() && url == props.Url && 
-                    (string.IsNullOrEmpty(props.Path) || path == props.Path))
+                    (string.IsNullOrWhiteSpace(props.Path) || path == props.Path))
                 {
                     return CreateRepositoryObject(repo);
                 }
             }
             return null;
-        }
-        catch
-        {
-            return null;
-        }
-    }
-
-    private async Task<dynamic?> GetRepositoryByIdAsync(Configuration configuration, string repoId, CancellationToken ct)
-    {
-        try
-        {
-            var response = await CallDatabricksApiForResponse<JsonElement>(configuration.WorkspaceUrl, HttpMethod.Get, $"{ReposApiEndpoint}/{repoId}", ct);
-            
-            if (response.ValueKind == JsonValueKind.Undefined || response.ValueKind == JsonValueKind.Null)
-                return null;
-
-            return CreateRepositoryObject(response);
         }
         catch
         {
@@ -146,7 +142,7 @@ public class DatabricksRepositoryHandler : DatabricksResourceHandlerBase<Reposit
         };
     }
 
-    private async Task<string> CreateRepositoryAsync(Configuration configuration, Repository props, CancellationToken ct)
+    private async Task<dynamic> CreateRepositoryAsync(Configuration configuration, Repository props, CancellationToken ct)
     {
         var createPayload = new Dictionary<string, object?>
         {
@@ -154,6 +150,7 @@ public class DatabricksRepositoryHandler : DatabricksResourceHandlerBase<Reposit
             ["url"] = props.Url
         };
 
+        // Add path only if provided
         if (!string.IsNullOrWhiteSpace(props.Path))
             createPayload["path"] = props.Path;
 
@@ -168,19 +165,26 @@ public class DatabricksRepositoryHandler : DatabricksResourceHandlerBase<Reposit
             };
         }
 
-        var response = await CallDatabricksApiForResponse<JsonElement>(configuration.WorkspaceUrl, HttpMethod.Post, ReposApiEndpoint, ct, createPayload);
-        if (response.ValueKind == JsonValueKind.Undefined || response.ValueKind == JsonValueKind.Null)
+        try
         {
-            throw new InvalidOperationException($"Failed to create repository for provider '{props.Provider}' and url '{props.Url}'.");
-        }
+            var response = await CallDatabricksApiForResponse<JsonElement>(configuration.WorkspaceUrl, HttpMethod.Post, ReposApiEndpoint, ct, createPayload);
+            if (response.ValueKind == JsonValueKind.Undefined || response.ValueKind == JsonValueKind.Null)
+            {
+                throw new InvalidOperationException($"Failed to create repository for provider '{props.Provider}' and url '{props.Url}'.");
+            }
 
-        // Extract the repository ID from the response
-        if (response.TryGetProperty("id", out var idProp))
+            // Return the repository object from the creation response
+            return CreateRepositoryObject(response);
+        }
+        catch (InvalidOperationException ex) when (ex.Message.Contains("already exists") || ex.Message.Contains("RESOURCE_ALREADY_EXISTS"))
         {
-            return idProp.GetInt64().ToString();
+            // Repository already exists - provide helpful error message
+            var pathInfo = string.IsNullOrWhiteSpace(props.Path) 
+                ? "To update an existing repository, you must provide the 'path' property to identify which repository to update."
+                : $"Repository already exists at path '{props.Path}'.";
+                
+            throw new InvalidOperationException($"Repository for URL '{props.Url}' already exists in Databricks. {pathInfo}");
         }
-
-        throw new InvalidOperationException("Repository creation response did not contain an ID.");
     }
 
     private async Task UpdateRepositoryAsync(Configuration configuration, Repository props, dynamic existing, CancellationToken ct)

@@ -11,4 +11,4 @@ resource directory 'Directory' = {
   path: '/Shared/fake@example.com/project'
 }
 
-output directoryId string = directory.path
+output directoryId string = directory.objectId

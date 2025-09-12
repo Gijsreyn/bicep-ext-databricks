@@ -2,7 +2,9 @@ using Microsoft.AspNetCore.Builder;
 using Bicep.Local.Extension.Host.Extensions;
 using Microsoft.Extensions.DependencyInjection;
 using Databricks.Models;
+using Databricks.Models.UnityCatalog;
 using Databricks.Handlers;
+using Databricks.Handlers.UnityCatalog;
 
 var builder = WebApplication.CreateBuilder();
 
@@ -15,7 +17,17 @@ builder.Services
         typeAssembly: typeof(Program).Assembly,
         configurationType: typeof(Configuration))
         .WithResourceHandler<DatabricksGitCredentialHandler>()
-        .WithResourceHandler<DatabricksRepositoryHandler>();
+        .WithResourceHandler<DatabricksRepositoryHandler>()
+        .WithResourceHandler<DatabricksDirectoryHandler>()
+        .WithResourceHandler<DatabricksClusterHandler>()
+        .WithResourceHandler<DatabricksSecretScopeHandler>()
+        .WithResourceHandler<DatabricksSecretHandler>()
+        .WithResourceHandler<DatabricksUnityCatalogHandler>()
+        .WithResourceHandler<DatabricksUnityCredentialHandler>()
+        .WithResourceHandler<DatabricksUnityConnectionHandler>()
+        .WithResourceHandler<DatabricksUnityExternalLocationHandler>()
+        .WithResourceHandler<DatabricksUnityStorageCredentialHandler>()
+        .WithResourceHandler<DatabricksUnitySchemaHandler>();
 
 var app = builder.Build();
 app.MapBicepExtension();

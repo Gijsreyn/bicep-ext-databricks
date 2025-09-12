@@ -25,3 +25,7 @@ utf
 workflows
 workspaces
 winget
+Serilog
+Entra
+LINQ
+mcp

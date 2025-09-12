@@ -14,4 +14,10 @@ dfs
 Linq
 mycontainer
 mystorageaccount
-
+chatmode
+codebases
+hci
+IUser
+nameof
+TProps
+vscode
