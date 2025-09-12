@@ -27,16 +27,4 @@ jobs:
     - name: Run build script
       shell: pwsh
       run: |
-        # ./build.ps1 -Configuration Release -Clean -Test -Verbose
-        Push-Location 'src'
-
-        dotnet test
-        Pop-Location
-        
-    - name: Upload test results
-      uses: actions/upload-artifact@v4
-      if: always()
-      with:
-        name: test-results
-        path: |
-          src/**/TestResults/*.xml
+        ./build.ps1 -Configuration Release -Clean -Test -Verbose
