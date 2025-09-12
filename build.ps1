@@ -34,91 +34,91 @@ param (
     $Test
 )
 
-# function getNetPath
-# {
-#     # Read version from global.json
-#     $globalJsonPath = Join-Path $PSScriptRoot 'global.json'
-#     $dotnetVersion = $null
+function getNetPath
+{
+    # Read version from global.json
+    $globalJsonPath = Join-Path $PSScriptRoot 'global.json'
+    $dotnetVersion = $null
     
-#     if (Test-Path $globalJsonPath)
-#     {
-#         if (Test-Json -Path $globalJsonPath)
-#         {
-#             $jsonContent = Get-Content $globalJsonPath -Raw | ConvertFrom-Json
+    if (Test-Path $globalJsonPath)
+    {
+        if (Test-Json -Path $globalJsonPath)
+        {
+            $jsonContent = Get-Content $globalJsonPath -Raw | ConvertFrom-Json
 
-#             $dotnetVersion = $jsonContent.sdk.version
-#         }
-#         else
-#         {
-#             throw "Invalid JSON format in global.json"
-#         }
-#     }
+            $dotnetVersion = $jsonContent.sdk.version
+        }
+        else
+        {
+            throw "Invalid JSON format in global.json"
+        }
+    }
 
-#     # TODO: Support multiple OS platforms
-#     $dotnetPath = Join-Path $env:ProgramFiles 'dotnet' 'sdk' $dotnetVersion
-#     if (-not (Test-Path $dotnetPath))
-#     {
-#         throw "Required .NET SDK version $dotnetVersion not found. Please install it using 'winget install Microsoft.DotNet.SDK.9'"
-#     }
+    # TODO: Support multiple OS platforms
+    $dotnetPath = Join-Path $env:ProgramFiles 'dotnet' 'sdk' $dotnetVersion
+    if (-not (Test-Path $dotnetPath))
+    {
+        throw "Required .NET SDK version $dotnetVersion not found. Please install it using 'winget install Microsoft.DotNet.SDK.9'"
+    }
 
-#     $dotnetExe = Join-Path (Split-Path (Split-Path $dotnetPath -Parent) -Parent) 'dotnet.exe'
+    $dotnetExe = Join-Path (Split-Path (Split-Path $dotnetPath -Parent) -Parent) 'dotnet.exe'
 
-#     return $dotnetExe
-# }
+    return $dotnetExe
+}
 
-# function getProjectPath ($ProjectName)
-# {
-#     $projectPath = Get-ChildItem -Path $PSScriptRoot -Recurse -Filter "$ProjectName.csproj" -File -ErrorAction Ignore | Select-Object -First 1
-#     if ($null -eq $projectPath)
-#     {
-#         Write-Error "Project file '$ProjectName.csproj' not found in the script directory or its subdirectories."
-#         return
-#     }
+function getProjectPath ($ProjectName)
+{
+    $projectPath = Get-ChildItem -Path $PSScriptRoot -Recurse -Filter "$ProjectName.csproj" -File -ErrorAction Ignore | Select-Object -First 1
+    if ($null -eq $projectPath)
+    {
+        Write-Error "Project file '$ProjectName.csproj' not found in the script directory or its subdirectories."
+        return
+    }
 
-#     return $projectPath.FullName
-# }
+    return $projectPath.FullName
+}
 
-# function testBicepExe
-# {
-#     $bicepExe = Get-Command bicep -CommandType Application -ErrorAction Ignore 
-#     if (-not $bicepExe)
-#     {
-#         return $false
-#     }
+function testBicepExe
+{
+    $bicepExe = Get-Command bicep -CommandType Application -ErrorAction Ignore 
+    if (-not $bicepExe)
+    {
+        return $false
+    }
 
-#     return $bicepExe.Source
-# }
+    return $bicepExe.Source
+}
 
-# function generateConfig ($configPath, $bicepRegistryUrl)
-# {
-#     if (-not (Test-Path $configPath))
-#     {
-#         $bicepConfig = [ordered]@{
-#             experimentalFeaturesEnabled = @{
-#                 localDeploy   = $true
-#                 extensibility = $true
-#             }
-#             cloud                       = @{
-#                 credentialPrecedence = @('AzurePowerShell')
-#                 currentProfile       = 'AzureCloud'
-#             }
-#             extensions                  = @{
-#                 databricksExtension = $bicepRegistryUrl
-#             }
-#             implicitExtensions          = @()
-#         } | ConvertTo-Json -Depth 10
+function generateConfig ($configPath, $bicepRegistryUrl)
+{
+    if (-not (Test-Path $configPath))
+    {
+        $bicepConfig = [ordered]@{
+            experimentalFeaturesEnabled = @{
+                localDeploy   = $true
+                extensibility = $true
+            }
+            cloud                       = @{
+                credentialPrecedence = @('AzurePowerShell')
+                currentProfile       = 'AzureCloud'
+            }
+            extensions                  = @{
+                databricksExtension = $bicepRegistryUrl
+            }
+            implicitExtensions          = @()
+        } | ConvertTo-Json -Depth 10
 
-#         $bicepConfig = $bicepConfig.Replace("\\", "/")
+        $bicepConfig = $bicepConfig.Replace("\\", "/")
         
-#         Set-Content -Path $configPath -Value $bicepConfig -Encoding UTF8 -Force
-#     }
-# }
+        Set-Content -Path $configPath -Value $bicepConfig -Encoding UTF8 -Force
+    }
+}
 
-# # Variables
-# $errorActionPreference = 'Stop'
-# $outputDirectory = Join-Path $PSScriptRoot 'output'
-# $dotNetExe = getNetPath
-# $projectPath = getProjectPath $ProjectName
+# Variables
+$errorActionPreference = 'Stop'
+$outputDirectory = Join-Path $PSScriptRoot 'output'
+$dotNetExe = getNetPath
+$projectPath = getProjectPath $ProjectName
 
 # if ($Bootstrap.IsPresent)
 # {
