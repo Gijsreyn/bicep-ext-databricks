@@ -39,7 +39,7 @@ jobs:
       with:
         name: test-results
         path: |
-          TestResults/**/*
+          TestResults/*.xml
           
     - name: Upload build artifacts
       uses: actions/upload-artifact@v4
@@ -47,4 +47,4 @@ jobs:
       with:
         name: build-artifacts
         path: |
-          output/databricks-extension
+          output/*
