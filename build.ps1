@@ -345,13 +345,30 @@ if ($Configuration -eq 'Release')
         try
         {
             Push-Location (Join-Path $PSScriptRoot 'src')
+            
+            # Create test results directory
+            $testResultsDir = Join-Path $PSScriptRoot 'TestResults'
+            if (-not (Test-Path $testResultsDir)) {
+                New-Item -ItemType Directory -Path $testResultsDir -Force | Out-Null
+            }
+            
             $testParams = @(
                 'test',
                 'Databricks.Extension.sln',
                 '-c', $Configuration,
-                '--verbosity', 'normal'
-                # TODO: Only report errors
+                '--verbosity', 'normal',
+                '--logger', 'trx',
+                '--results-directory', $testResultsDir
             )
+            
+            # Add additional logging for CI environments
+            if ($env:GITHUB_ACTIONS -eq 'true') {
+                $testParams += @(
+                    '--logger', 'GitHubActions',
+                    '--logger', "junit;LogFilePath=$testResultsDir\test-results.xml"
+                )
+                Write-Output "Running in GitHub Actions - enabling additional test result formats"
+            }
 
             Write-Verbose "Running tests for solution 'Databricks.Extension.sln' with" -Verbose
             Write-Verbose ($testParams | ConvertTo-Json | Out-String) -Verbose
@@ -361,6 +378,8 @@ if ($Configuration -eq 'Release')
             {
                 throw "Tests failed: $res"
             }
+            
+            Write-Output "Test results saved to: $testResultsDir"
         }
         finally
         {
