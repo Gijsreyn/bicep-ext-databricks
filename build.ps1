@@ -65,7 +65,8 @@ function getNetPath
 
         $dotnetExe = Join-Path (Split-Path (Split-Path $dotnetPath -Parent) -Parent) 'dotnet.exe'
     } 
-    elseif ($IsLinux) {
+    elseif ($IsLinux)
+    {
         $dotnetExe = (Get-Command dotnet).Source
     }
 
@@ -359,44 +360,35 @@ if ($Configuration -eq 'Release')
 
     if ($Test.IsPresent)
     {
-        try
+        $solutionFile = Get-ChildItem -Path 'src' -Filter "$ProjectName.sln" -Recurse
+        $testParams = @(
+            'test',
+            "$($solutionFile.FullName)",
+            '-c', $Configuration,
+            '--verbosity', 'normal'
+        )
+
+        if ($env:GITHUB_ACTIONS -eq 'true')
         {
-            Push-Location (Join-Path $PSScriptRoot 'src')
-        
-            
-            $testParams = @(
-                'test',
-                "$ProjectName.sln",
-                '-c', $Configuration,
-                '--verbosity', 'normal'
+            Write-Verbose "Running test in GitHub actions"
+            $testParams += @(
+                "--logger", "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true"
             )
-
-            if ($env:GITHUB_ACTIONS -eq 'true')
-            {
-                Write-Verbose "Running test in GitHub actions"
-                $testParams += @(
-                    "--logger", "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true"
-                )
-            }
-            else 
-            {
-                $testParams += @(
-                    "--logger:junit"
-                )
-            }
-
-            Write-Verbose "Running tests for '$ProjectName' with" -Verbose
-            Write-Verbose ($testParams | ConvertTo-Json | Out-String) -Verbose
-            $res = & $dotNetExe @testParams
-
-            if ($LASTEXITCODE -ne 0)
-            {
-                throw "Tests failed: $res"
-            }
         }
-        finally
+        else 
         {
-            Pop-Location
+            $testParams += @(
+                "--logger:junit"
+            )
+        }
+
+        Write-Verbose "Running tests for '$ProjectName' with" -Verbose
+        Write-Verbose ($testParams | ConvertTo-Json | Out-String) -Verbose
+        $res = & $dotNetExe @testParams
+
+        if ($LASTEXITCODE -ne 0)
+        {
+            throw "Tests failed: $res"
         }
     }
 }
