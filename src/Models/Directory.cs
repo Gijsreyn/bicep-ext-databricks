@@ -2,7 +2,7 @@ using Azure.Bicep.Types.Concrete;
 using Bicep.Local.Extension.Types.Attributes;
 using System.Text.Json.Serialization;
 
-namespace Databricks.Models.Workspace;
+namespace Databricks.Models;
 
 public enum ObjectType
 {
