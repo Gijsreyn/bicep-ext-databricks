@@ -20,7 +20,7 @@ public class Directory : DirectoryIdentifiers
 	// Outputs
     [TypeProperty("The object type of the directory.", ObjectTypePropertyFlags.ReadOnly)]
     [JsonConverter(typeof(JsonStringEnumConverter))]
-    public ObjectType ObjectType { get; set; }
+    public ObjectType? ObjectType { get; set; }
 
     [TypeProperty("The object id of the directory.", ObjectTypePropertyFlags.ReadOnly)]
     public string? ObjectId { get; set; }

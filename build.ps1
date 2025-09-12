@@ -215,6 +215,30 @@ if ($Clean.IsPresent)
 
 if ($Configuration -eq 'Release')
 {
+    # Build the solution
+    try
+    {
+        Push-Location (Join-Path $PSScriptRoot 'src')
+        $buildParams = @(
+            'build',
+            'Databricks.Extension.sln',
+            '-c', $Configuration
+        )
+
+        Write-Verbose "Building solution 'Databricks.Extension.sln' with" -Verbose
+        Write-Verbose ($buildParams | ConvertTo-Json | Out-String) -Verbose
+        $res = & $dotNetExe @buildParams 
+
+        if ($LASTEXITCODE -ne 0)
+        {
+            throw $res
+        }
+    }
+    finally
+    {
+        Pop-Location
+    }
+
     $platforms = @('win-x64', 'linux-x64', 'osx-x64')
     $extensionParams = @(
         'publish-extension'
@@ -318,19 +342,29 @@ if ($Configuration -eq 'Release')
 
     if ($Test.IsPresent)
     {
-        $testContainerData = @{
-            workspaceUrl = $environment.workspaceUrl
+        try
+        {
+            Push-Location (Join-Path $PSScriptRoot 'src')
+            $testParams = @(
+                'test',
+                'Databricks.Extension.sln',
+                '-c', $Configuration,
+                '--verbosity', 'normal'
+                # TODO: Only report errors
+            )
+
+            Write-Verbose "Running tests for solution 'Databricks.Extension.sln' with" -Verbose
+            Write-Verbose ($testParams | ConvertTo-Json | Out-String) -Verbose
+            $res = & $dotNetExe @testParams
+
+            if ($LASTEXITCODE -ne 0)
+            {
+                throw "Tests failed: $res"
+            }
         }
-
-        $testPath = Join-Path $PSScriptRoot 'tests'
-
-        Invoke-Pester -Configuration @{
-            Run    = @{
-                Container = New-PesterContainer -Path $testPath -Data $testContainerData
-            }
-            Output = @{
-                Verbosity = 'Detailed'
-            }
-        } -ErrorAction Stop
+        finally
+        {
+            Pop-Location
+        }
     }
 }

@@ -3,8 +3,17 @@ using Microsoft.Extensions.Logging;
 using DatabricksDirectory = Databricks.Models.Workspace.Directory;
 using DatabricksDirectoryIdentifiers = Databricks.Models.Workspace.DirectoryIdentifiers;
 using Configuration = Databricks.Models.Configuration;
+using ObjectType = Databricks.Models.Workspace.ObjectType;
 
 namespace Databricks.Handlers.Workspace;
+
+public class DirectoryStatus
+{
+    public ObjectType ObjectType { get; set; }
+    public string? ObjectId { get; set; }
+    public string? Path { get; set; }
+    public string? Size { get; set; }
+}
 
 public class DatabricksDirectoryHandler : DatabricksResourceHandlerBase<DatabricksDirectory, DatabricksDirectoryIdentifiers>
 {
@@ -18,9 +27,9 @@ public class DatabricksDirectoryHandler : DatabricksResourceHandlerBase<Databric
         var existing = await GetDirectoryStatusAsync(request.Config, request.Properties, cancellationToken);
         if (existing is not null)
         {
-            request.Properties.ObjectType = existing.object_type;
-            request.Properties.ObjectId = existing.object_id;
-            request.Properties.Size = existing.size;
+            request.Properties.ObjectType = existing.ObjectType;
+            request.Properties.ObjectId = existing.ObjectId;
+            request.Properties.Size = existing.Size;
         }
         return GetResponse(request);
     }
@@ -52,9 +61,9 @@ public class DatabricksDirectoryHandler : DatabricksResourceHandlerBase<Databric
             _logger.LogInformation("Directory already exists at path {Path}", props.Path);
         }
 
-        props.ObjectType = existing.object_type;
-        props.ObjectId = existing.object_id;
-        props.Size = existing.size;
+        props.ObjectType = existing.ObjectType;
+        props.ObjectId = existing.ObjectId;
+        props.Size = existing.Size;
 
         return GetResponse(request);
     }
@@ -64,7 +73,7 @@ public class DatabricksDirectoryHandler : DatabricksResourceHandlerBase<Databric
         Path = properties.Path
     };
 
-    private async Task<dynamic?> GetDirectoryStatusAsync(Configuration configuration, DatabricksDirectory props, CancellationToken ct)
+    private async Task<DirectoryStatus?> GetDirectoryStatusAsync(Configuration configuration, DatabricksDirectory props, CancellationToken ct)
     {
         try
         {
@@ -79,29 +88,40 @@ public class DatabricksDirectoryHandler : DatabricksResourceHandlerBase<Databric
             // Check if it's a directory (object_type = "DIRECTORY" or 2)
             if (response.TryGetProperty("object_type", out var objectType))
             {
-                bool isDirectory = false;
-                int objectTypeInt = 0;
+                ObjectType? parsedObjectType = null;
                 
                 if (objectType.ValueKind == JsonValueKind.String)
                 {
                     var objectTypeString = objectType.GetString();
-                    isDirectory = objectTypeString?.Equals("DIRECTORY", StringComparison.OrdinalIgnoreCase) == true;
-                    objectTypeInt = isDirectory ? 2 : 0; // Convert DIRECTORY string to type 2
+                    if (Enum.TryParse<ObjectType>(objectTypeString, true, out var enumValue))
+                    {
+                        parsedObjectType = enumValue;
+                    }
                 }
                 else if (objectType.ValueKind == JsonValueKind.Number)
                 {
-                    objectTypeInt = objectType.GetInt32();
-                    isDirectory = objectTypeInt == 2;
+                    var objectTypeInt = objectType.GetInt32();
+                    // Map integer values to enum (legacy API support)
+                    parsedObjectType = objectTypeInt switch
+                    {
+                        1 => ObjectType.NOTEBOOK,
+                        2 => ObjectType.DIRECTORY,
+                        3 => ObjectType.LIBRARY,
+                        4 => ObjectType.FILE,
+                        5 => ObjectType.REPO,
+                        6 => ObjectType.DASHBOARD,
+                        _ => null
+                    };
                 }
                 
-                if (isDirectory)
+                if (parsedObjectType == ObjectType.DIRECTORY)
                 {
-                    return new
+                    return new DirectoryStatus
                     {
-                        object_type = objectTypeInt,
-                        object_id = response.TryGetProperty("object_id", out var objectId) ? objectId.GetInt64().ToString() : null,
-                        path = response.TryGetProperty("path", out var path) ? path.GetString() : null,
-                        size = response.TryGetProperty("size", out var size) ? size.GetInt64().ToString() : null
+                        ObjectType = parsedObjectType.Value,
+                        ObjectId = response.TryGetProperty("object_id", out var objectId) ? objectId.GetInt64().ToString() : null,
+                        Path = response.TryGetProperty("path", out var path) ? path.GetString() : null,
+                        Size = response.TryGetProperty("size", out var size) ? size.GetInt64().ToString() : null
                     };
                 }
             }
