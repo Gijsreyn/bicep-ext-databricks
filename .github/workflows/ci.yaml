@@ -19,11 +19,6 @@ jobs:
       with:
         global-json-file: global.json
         
-    # - name: Setup PowerShell 7
-    #   uses: actions/setup-powershell@v1
-    #   with:
-    #     powershell-version: '7.x'
-        
     - name: Install required PowerShell modules
       shell: pwsh
       run: |
@@ -32,7 +27,11 @@ jobs:
     - name: Run build script
       shell: pwsh
       run: |
-        ./build.ps1 -Configuration Release -Clean -Test -Verbose
+        # ./build.ps1 -Configuration Release -Clean -Test -Verbose
+        Push-Location 'src'
+
+        dotnet test
+        Pop-Location
         
     - name: Upload test results
       uses: actions/upload-artifact@v4
