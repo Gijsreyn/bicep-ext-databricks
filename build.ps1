@@ -293,6 +293,11 @@ if ($Configuration -eq 'Release')
     }
 
     if ($Publish.IsPresent)
+    {
+        $containerParams = $extensionParams
+        $containerParams += @('--target', $bicepRegistryUrl)
+    }
+
     $changeLog = Get-ChangelogData -Path (Join-Path $PSScriptRoot 'CHANGELOG.md') -ErrorAction Stop
     $version = $changeLog.LastVersion
 
@@ -312,11 +317,6 @@ if ($Configuration -eq 'Release')
     }
 
     $bicepRegistryUrl = [System.String]::Concat('br:', $environment.ContainerRegistryUrl, '/extension/', 'databricks', ':v', $version)
-
-    {
-        $containerParams = $extensionParams
-        $containerParams += @('--target', $bicepRegistryUrl)
-    }
 
     $extensionParams += @(
         '--target', $targetName,
