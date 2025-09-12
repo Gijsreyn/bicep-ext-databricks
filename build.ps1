@@ -127,9 +127,11 @@ if ($Bootstrap.IsPresent)
 
     # Go through existing to see if user provided different parameters
     $currentParameters = $PSBoundParameters
-    if ($currentParameters.ContainsKey('ResourceGroupName') -or $currentParameters.ContainsKey('Location') -or $currentParameters.ContainsKey('ContainerRegistryName') -or $currentParameters.ContainsKey('DatabricksWorkspaceName')){
+    if ($currentParameters.ContainsKey('ResourceGroupName') -or $currentParameters.ContainsKey('Location') -or $currentParameters.ContainsKey('ContainerRegistryName') -or $currentParameters.ContainsKey('DatabricksWorkspaceName'))
+    {
         $bicepExe = testBicepExe
-        if ($bicepExe) {
+        if ($bicepExe)
+        {
             $randomFileName = [System.IO.Path]::GetRandomFileName()
             $fileExtension = [System.IO.Path]::GetExtension($randomFileName)
             $randomFileName = $randomFileName.Replace($fileExtension, '.json')
@@ -143,11 +145,14 @@ if ($Bootstrap.IsPresent)
 
             # Set new content
             $setContent = $false
-            foreach ($key in $currentParameters.Keys) {
+            foreach ($key in $currentParameters.Keys)
+            {
                 Write-Verbose "Processing parameter '$key' with value '$($currentParameters[$key])'"
-                if ($existingParameters.parameters.ContainsKey($key)) {
+                if ($existingParameters.parameters.ContainsKey($key))
+                {
                     Write-Verbose -Message "Parameter '$key' already exists with value '$($existingParameters.parameters[$key].value)'"
-                    if ($existingParameters.parameters[$key].value -ne $currentParameters[$key]) {
+                    if ($existingParameters.parameters[$key].value -ne $currentParameters[$key])
+                    {
                         $setContent = $true
                         Write-Verbose "Updating parameter '$key' from '$($existingParameters.parameters[$key].value)' to '$($currentParameters[$key])'"
                         $existingParameters.parameters[$key].value = $currentParameters[$key]
@@ -155,7 +160,8 @@ if ($Bootstrap.IsPresent)
                 }
             }
 
-            if ($setContent) {
+            if ($setContent)
+            {
                 Write-Verbose "Updating parameters in '$tempJsonPath'"
                 Set-Content -Path $tempJsonPath -Value ($existingParameters | ConvertTo-Json -Depth 10) -Encoding UTF8 -Force
 
@@ -176,9 +182,9 @@ if ($Bootstrap.IsPresent)
     }
 
     $params = @{
-        TemplateFile = $bicepFile
+        TemplateFile          = $bicepFile
         TemplateParameterFile = $bicepParameterFile
-        Location = $location
+        Location              = $location
     }
     
     Write-Verbose "Deploying Bicep template with parameters:" -Verbose
@@ -190,7 +196,8 @@ if ($Bootstrap.IsPresent)
         WorkspaceUrl         = ('https://' + $result.Outputs.dbtWorkspaceUrl.value)
     }
 
-    if ($setContent) {
+    if ($setContent)
+    {
         Remove-Item -Path $tempBicepParameterFile -Force -ErrorAction Ignore
     }
 }
@@ -285,6 +292,7 @@ if ($Configuration -eq 'Release')
         }
     }
 
+    if ($Publish.IsPresent)
     $changeLog = Get-ChangelogData -Path (Join-Path $PSScriptRoot 'CHANGELOG.md') -ErrorAction Stop
     $version = $changeLog.LastVersion
 
@@ -305,7 +313,6 @@ if ($Configuration -eq 'Release')
 
     $bicepRegistryUrl = [System.String]::Concat('br:', $environment.ContainerRegistryUrl, '/extension/', 'databricks', ':v', $version)
 
-    if ($Publish.IsPresent)
     {
         $containerParams = $extensionParams
         $containerParams += @('--target', $bicepRegistryUrl)
@@ -348,7 +355,8 @@ if ($Configuration -eq 'Release')
             
             # Create test results directory
             $testResultsDir = Join-Path $PSScriptRoot 'TestResults'
-            if (-not (Test-Path $testResultsDir)) {
+            if (-not (Test-Path $testResultsDir))
+            {
                 New-Item -ItemType Directory -Path $testResultsDir -Force | Out-Null
             }
             
@@ -362,7 +370,8 @@ if ($Configuration -eq 'Release')
             )
             
             # Add additional logging for CI environments
-            if ($env:GITHUB_ACTIONS -eq 'true') {
+            if ($env:GITHUB_ACTIONS -eq 'true')
+            {
                 $testParams += @(
                     '--logger', 'GitHubActions',
                     '--logger', "junit;LogFilePath=$testResultsDir\test-results.xml"
