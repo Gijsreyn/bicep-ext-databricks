@@ -14,7 +14,8 @@ builder.Services
         isSingleton: true,
         typeAssembly: typeof(Program).Assembly,
         configurationType: typeof(Configuration))
-        .WithResourceHandler<DatabricksGitCredentialHandler>();
+        .WithResourceHandler<DatabricksGitCredentialHandler>()
+        .WithResourceHandler<DatabricksRepositoryHandler>();
 
 var app = builder.Build();
 app.MapBicepExtension();
