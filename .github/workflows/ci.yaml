@@ -8,7 +8,7 @@ on:
 
 jobs:
   build-and-test:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
     
     steps:
     - name: Checkout code
@@ -19,15 +19,19 @@ jobs:
       with:
         global-json-file: global.json
         
-    - name: Setup PowerShell 7
-      uses: actions/setup-powershell@v1
-      with:
-        powershell-version: '7.x'
-        
+    - name: Install PowerShell
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y wget apt-transport-https software-properties-common
+        wget -q "https://packages.microsoft.com/config/ubuntu/$(lsb_release -rs)/packages-microsoft-prod.deb"
+        sudo dpkg -i packages-microsoft-prod.deb
+        sudo apt-get update
+        sudo apt-get install -y powershell
+      
     - name: Install required PowerShell modules
       shell: pwsh
       run: |
-        Install-Module -Name ChangelogManagement -Force -Scope CurrentUser
+        Install-PSResource -Name ChangelogManagement -Force -Scope CurrentUser
         
     - name: Run build script
       shell: pwsh
