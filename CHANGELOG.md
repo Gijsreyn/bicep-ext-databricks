@@ -1,6 +1,13 @@
 <!-- markdownlint-disable MD024 -->
 # Changelog
 
+## [0.2.0] - 2025-09-12
+
+### Changed
+
+- Fully restructured solution.
+- Added XUnit tests project.
+
 ## [0.1.9] - 2025-08-15
 
 ### Added
