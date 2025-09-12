@@ -55,13 +55,20 @@ function getNetPath
     }
 
     # TODO: Support multiple OS platforms
-    $dotnetPath = Join-Path $env:ProgramFiles 'dotnet' 'sdk' $dotnetVersion
-    if (-not (Test-Path $dotnetPath))
+    if ($IsWindows)
     {
-        throw "Required .NET SDK version $dotnetVersion not found. Please install it using 'winget install Microsoft.DotNet.SDK.9'"
-    }
+        $dotnetPath = Join-Path $env:ProgramFiles 'dotnet' 'sdk' $dotnetVersion
+        if (-not (Test-Path $dotnetPath))
+        {
+            throw "Required .NET SDK version $dotnetVersion not found. Please install it using 'winget install Microsoft.DotNet.SDK.9'"
+        }
 
-    $dotnetExe = Join-Path (Split-Path (Split-Path $dotnetPath -Parent) -Parent) 'dotnet.exe'
+        $dotnetExe = Join-Path (Split-Path (Split-Path $dotnetPath -Parent) -Parent) 'dotnet.exe'
+    } 
+    elseif ($IsLinux)
+    {
+        $dotnetExe = (Get-Command dotnet).Source
+    }
 
     return $dotnetExe
 }
@@ -127,9 +134,11 @@ if ($Bootstrap.IsPresent)
 
     # Go through existing to see if user provided different parameters
     $currentParameters = $PSBoundParameters
-    if ($currentParameters.ContainsKey('ResourceGroupName') -or $currentParameters.ContainsKey('Location') -or $currentParameters.ContainsKey('ContainerRegistryName') -or $currentParameters.ContainsKey('DatabricksWorkspaceName')){
+    if ($currentParameters.ContainsKey('ResourceGroupName') -or $currentParameters.ContainsKey('Location') -or $currentParameters.ContainsKey('ContainerRegistryName') -or $currentParameters.ContainsKey('DatabricksWorkspaceName'))
+    {
         $bicepExe = testBicepExe
-        if ($bicepExe) {
+        if ($bicepExe)
+        {
             $randomFileName = [System.IO.Path]::GetRandomFileName()
             $fileExtension = [System.IO.Path]::GetExtension($randomFileName)
             $randomFileName = $randomFileName.Replace($fileExtension, '.json')
@@ -143,11 +152,14 @@ if ($Bootstrap.IsPresent)
 
             # Set new content
             $setContent = $false
-            foreach ($key in $currentParameters.Keys) {
+            foreach ($key in $currentParameters.Keys)
+            {
                 Write-Verbose "Processing parameter '$key' with value '$($currentParameters[$key])'"
-                if ($existingParameters.parameters.ContainsKey($key)) {
+                if ($existingParameters.parameters.ContainsKey($key))
+                {
                     Write-Verbose -Message "Parameter '$key' already exists with value '$($existingParameters.parameters[$key].value)'"
-                    if ($existingParameters.parameters[$key].value -ne $currentParameters[$key]) {
+                    if ($existingParameters.parameters[$key].value -ne $currentParameters[$key])
+                    {
                         $setContent = $true
                         Write-Verbose "Updating parameter '$key' from '$($existingParameters.parameters[$key].value)' to '$($currentParameters[$key])'"
                         $existingParameters.parameters[$key].value = $currentParameters[$key]
@@ -155,7 +167,8 @@ if ($Bootstrap.IsPresent)
                 }
             }
 
-            if ($setContent) {
+            if ($setContent)
+            {
                 Write-Verbose "Updating parameters in '$tempJsonPath'"
                 Set-Content -Path $tempJsonPath -Value ($existingParameters | ConvertTo-Json -Depth 10) -Encoding UTF8 -Force
 
@@ -176,9 +189,9 @@ if ($Bootstrap.IsPresent)
     }
 
     $params = @{
-        TemplateFile = $bicepFile
+        TemplateFile          = $bicepFile
         TemplateParameterFile = $bicepParameterFile
-        Location = $location
+        Location              = $location
     }
     
     Write-Verbose "Deploying Bicep template with parameters:" -Verbose
@@ -190,7 +203,8 @@ if ($Bootstrap.IsPresent)
         WorkspaceUrl         = ('https://' + $result.Outputs.dbtWorkspaceUrl.value)
     }
 
-    if ($setContent) {
+    if ($setContent)
+    {
         Remove-Item -Path $tempBicepParameterFile -Force -ErrorAction Ignore
     }
 }
@@ -215,6 +229,30 @@ if ($Clean.IsPresent)
 
 if ($Configuration -eq 'Release')
 {
+    # Build the solution
+    try
+    {
+        Push-Location (Join-Path $PSScriptRoot 'src')
+        $buildParams = @(
+            'build',
+            'Databricks.Extension.sln',
+            '-c', $Configuration
+        )
+
+        Write-Verbose "Building solution 'Databricks.Extension.sln' with" -Verbose
+        Write-Verbose ($buildParams | ConvertTo-Json | Out-String) -Verbose
+        $res = & $dotNetExe @buildParams 
+
+        if ($LASTEXITCODE -ne 0)
+        {
+            throw $res
+        }
+    }
+    finally
+    {
+        Pop-Location
+    }
+
     $platforms = @('win-x64', 'linux-x64', 'osx-x64')
     $extensionParams = @(
         'publish-extension'
@@ -261,25 +299,29 @@ if ($Configuration -eq 'Release')
         }
     }
 
-    $changeLog = Get-ChangelogData -Path (Join-Path $PSScriptRoot 'CHANGELOG.md') -ErrorAction Stop
-    $version = $changeLog.LastVersion
-
-    if ([string]::IsNullOrEmpty($environment))
+    if ($env:GITHUB_ACTIONS -ne $true)
     {
-        $dbtInstance = Get-AzDatabricksWorkspace -ResourceGroupName $ResourceGroupName -Name $DatabricksWorkspaceName -ErrorAction Ignore
+        $changeLog = Get-ChangelogData -Path (Join-Path $PSScriptRoot 'CHANGELOG.md') -ErrorAction Stop
+        $version = $changeLog.LastVersion
 
-        if (-not $dbtInstance)
+
+        if ([string]::IsNullOrEmpty($environment))
         {
-            throw "Databricks workspace '$DatabricksWorkspaceName' not found in resource group '$ResourceGroupName'. Please ensure the environment is bootstrapped."
+            $dbtInstance = Get-AzDatabricksWorkspace -ResourceGroupName $ResourceGroupName -Name $DatabricksWorkspaceName -ErrorAction Ignore
+
+            if (-not $dbtInstance)
+            {
+                throw "Databricks workspace '$DatabricksWorkspaceName' not found in resource group '$ResourceGroupName'. Please ensure the environment is bootstrapped."
+            }
+
+            $environment = @{ 
+                ContainerRegistryUrl = ([System.String]::Concat($ContainerRegistryName, '.azurecr.io'))
+                WorkspaceUrl         = ('https://' + $dbtInstance.Url)
+            }
         }
 
-        $environment = @{ 
-            ContainerRegistryUrl = ([System.String]::Concat($ContainerRegistryName, '.azurecr.io'))
-            WorkspaceUrl         = ('https://' + $dbtInstance.Url)
-        }
+        $bicepRegistryUrl = [System.String]::Concat('br:', $environment.ContainerRegistryUrl, '/extension/', 'databricks', ':v', $version)
     }
-
-    $bicepRegistryUrl = [System.String]::Concat('br:', $environment.ContainerRegistryUrl, '/extension/', 'databricks', ':v', $version)
 
     if ($Publish.IsPresent)
     {
@@ -318,19 +360,35 @@ if ($Configuration -eq 'Release')
 
     if ($Test.IsPresent)
     {
-        $testContainerData = @{
-            workspaceUrl = $environment.workspaceUrl
+        $solutionFile = Get-ChildItem -Path 'src' -Filter "$ProjectName.sln" -Recurse
+        $testParams = @(
+            'test',
+            "$($solutionFile.FullName)",
+            '-c', $Configuration,
+            '--verbosity', 'normal'
+        )
+
+        if ($env:GITHUB_ACTIONS -eq 'true')
+        {
+            Write-Verbose "Running test in GitHub actions"
+            $testParams += @(
+                "--logger", "GitHubActions;summary.includePassedTests=true;summary.includeSkippedTests=true"
+            )
+        }
+        else 
+        {
+            $testParams += @(
+                "--logger:junit"
+            )
         }
 
-        $testPath = Join-Path $PSScriptRoot 'tests'
+        Write-Verbose "Running tests for '$ProjectName' with" -Verbose
+        Write-Verbose ($testParams | ConvertTo-Json | Out-String) -Verbose
+        $res = & $dotNetExe @testParams
 
-        Invoke-Pester -Configuration @{
-            Run    = @{
-                Container = New-PesterContainer -Path $testPath -Data $testContainerData
-            }
-            Output = @{
-                Verbosity = 'Detailed'
-            }
-        } -ErrorAction Stop
+        if ($LASTEXITCODE -ne 0)
+        {
+            throw "Tests failed: $res"
+        }
     }
 }

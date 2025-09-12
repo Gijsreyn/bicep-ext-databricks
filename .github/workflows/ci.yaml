@@ -1,0 +1,30 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
+      with:
+        global-json-file: global.json
+        
+    - name: Install required PowerShell modules
+      shell: pwsh
+      run: |
+        Install-PSResource -Name ChangelogManagement -Scope CurrentUser -Repository PSGallery -TrustRepository
+        
+    - name: Run build script
+      shell: pwsh
+      run: |
+        ./build.ps1 -Configuration Release -Clean -Test -Verbose

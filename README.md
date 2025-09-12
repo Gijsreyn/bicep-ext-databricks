@@ -55,7 +55,6 @@ To execute the all operations, make sure you have:
 * .NET SDK v9.0 installed
 * Bicep CLI v0.36.1 or higher
 * An Azure subscription
-* Basic knowledge around Pester
 
 Other prerequisites are saved locally in the project structure when you
 bootstrap the environment.
@@ -136,45 +135,28 @@ extension to this container registry by adding the `-Publish` switch parameter:
 
 ## Testing
 
-To verify and test the working of the Bicep Databricks extension, Pester tests
-can be executed locally. Each Pester tests looks at the `examples` directory
-and does the following in sequence:
+To verify and test the working of the Bicep Databricks extension, .NET unit tests
+are executed using xUnit. The test project `Databricks.Extension.Tests` contains
+test coverage for all handlers and models:
 
-1. Check if Bicep CLI is available.
-   1. If not, the test(s) will be skipped.
-2. It leverages the `Initialize-TestCase.ps1` script by transforming the
-   `<workspaceUrl>` to an existing Azure Databricks instance. It copies
-   over the specific example to the `$TestDrive` variable.
-3. The test is executed.
+1. **Handler Tests**: Validate constructor initialization and model property  
+   assignments
+2. **Model Tests**: Verify property validation, enum values, and data integrity
+3. **Azure Databricks Integration**: Tests cover Unity Catalog, Workspace, and  
+   Compute handlers
 
-You can execute Pester tests by running the following in a PowerShell terminal:
+You can execute the unit tests by running the following in a PowerShell terminal:
 
 ```powershell
 ./build.ps1 -Configuration Release -Test
 ```
 
-## Examples
-
-Each handler should have at least one example available in the `examples` directory.
-These examples are also used for testing purposes. The following table represents
-the available examples from the particular released versions:
-
-| **Example name**                  | **Description**                                 | **Available from** |
-|-----------------------------------|-------------------------------------------------|--------------------|
-| [Create a directory][01]          | Creates a directory in a Databricks workspace   | v0.1.0 and above   |
-| [Create basic cluster][02]        | Deploys a basic cluster                         | v0.1.2 and above   |
-| [Create a repository][03]         | Create a repository in a Databricks workspace   | v0.1.5 and above   |
-| [Create Git credential][04]       | Creates a new Git credential in Linked Accounts | v0.1.5 and above   |
-| [Create a Unity Catalog][05]      | Create a new Unity Catalog                      | v0.1.6 and above   |
-| [Create a Storage Credential][06] | Create a Storage Credential                     | v0.1.8 and above   |
-| [Create an External Location][07]   | Create an External Location                     | v0.1.9 and above   |
-
-> [!NOTE]
-> Always make sure to use the latest version of the extension.
+The test results are automatically generated in TRX and JUnit formats when  
+running in CI environments, and all test artifacts are preserved for analysis.
 
 ## Documentation
 
-Check out the [docs][08] section for more information around Databricks resources.
+Check out the [docs][01] section for more information around Databricks resources.
 
 ## Troubleshooting
 
@@ -188,16 +170,9 @@ $env:BICEP_TRACING_ENABLED = $true
 
 ## Contributing
 
-Want to contribute? Check out the [CONTRIBUTING.md][09] for more information.
+Want to contribute? Check out the [CONTRIBUTING.md][02] for more information.
 
 <!-- Link reference definitions -->
 [00]: CHANGELOG.md
-[01]: ./examples/workspace/directory.bicep
-[02]: ./examples/compute/cluster.basic.bicep
-[03]: ./examples/workspace/repo.basic.bicep
-[04]: ./examples/workspace/gitCredential.bicep
-[05]: ./examples/unity/catalog.basic.bicep
-[06]: ./examples/unity/catalog.basic.bicep
-[07]: ./examples/unity/externalLocation.basic.bicep
-[08]: ./docs/index.md
-[09]: CONTRIBUTING.md
+[01]: ./docs/index.md
+[02]: CONTRIBUTING.md
