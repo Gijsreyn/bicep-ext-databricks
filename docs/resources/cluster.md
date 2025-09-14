@@ -1,5 +1,5 @@
 ﻿---
-subcategory: "Compute"
+category: "Compute"
 ---
 
 # Cluster
