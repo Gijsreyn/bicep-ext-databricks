@@ -3,6 +3,146 @@ using Bicep.Local.Extension.Types.Attributes;
 
 namespace Databricks.Models.Compute;
 
+
+[BicepFrontMatter("category", "Compute")]
+[BicepDocHeading("Cluster", "Represents a Databricks compute cluster for running workloads.")]
+[BicepDocExample(
+    "Creating a basic cluster with fixed size",
+    "This example shows how to create a basic cluster with a fixed number of worker nodes.",
+    @"resource cluster 'Cluster' = {
+  clusterName: 'analytics-cluster'
+  sparkVersion: '13.3.x-scala2.12'
+  nodeTypeId: 'Standard_DS3_v2'
+  numWorkers: 2
+  autoterminationMinutes: 120
+  dataSecurityMode: 'SINGLE_USER'
+  singleUserName: 'analyst@company.com'
+}
+"
+)]
+[BicepDocExample(
+    "Creating an auto-scaling cluster",
+    "This example shows how to create a cluster with auto-scaling configuration.",
+    @"resource autoScalingCluster 'Cluster' = {
+  clusterName: 'ml-training-cluster'
+  sparkVersion: '13.3.x-gpu-ml-scala2.12'
+  nodeTypeId: 'Standard_NC6s_v3'
+  driverNodeTypeId: 'Standard_DS4_v2'
+  autoScale: {
+    minWorkers: 1
+    maxWorkers: 8
+  }
+  autoterminationMinutes: 60
+  dataSecurityMode: 'USER_ISOLATION'
+  runtimeEngine: 'PHOTON'
+  sparkConf: {
+    'spark.sql.adaptive.enabled': 'true'
+    'spark.sql.adaptive.coalescePartitions.enabled': 'true'
+  }
+  customTags: {
+    team: 'ml-engineering'
+    environment: 'production'
+    cost_center: 'CC123'
+  }
+}
+"
+)]
+[BicepDocExample(
+    "Creating a cluster with Azure spot instances",
+    "This example shows how to create a cost-optimized cluster using Azure spot instances.",
+    @"resource spotCluster 'Cluster' = {
+  clusterName: 'batch-processing-cluster'
+  sparkVersion: '13.3.x-scala2.12'
+  nodeTypeId: 'Standard_E4s_v3'
+  autoScale: {
+    minWorkers: 2
+    maxWorkers: 10
+  }
+  autoterminationMinutes: 30
+  azureAttributes: {
+    firstOnDemand: 1
+    availability: 'SPOT_WITH_FALLBACK_AZURE'
+    spotBidMaxPrice: 100
+  }
+  sparkConf: {
+    'spark.databricks.cluster.profile': 'serverless'
+    'spark.databricks.delta.preview.enabled': 'true'
+  }
+  customTags: {
+    workload: 'batch-processing'
+    schedule: 'nightly'
+  }
+}
+"
+)]
+[BicepDocExample(
+    "Creating a high-concurrency cluster",
+    "This example shows how to create a high-concurrency cluster for shared analytics workloads.",
+    @"resource sharedCluster 'Cluster' = {
+  clusterName: 'shared-analytics-cluster'
+  sparkVersion: '13.3.x-scala2.12'
+  nodeTypeId: 'Standard_DS4_v2'
+  driverNodeTypeId: 'Standard_DS5_v2'
+  autoScale: {
+    minWorkers: 2
+    maxWorkers: 20
+  }
+  autoterminationMinutes: 180
+  dataSecurityMode: 'USER_ISOLATION'
+  runtimeEngine: 'STANDARD'
+  sparkConf: {
+    'spark.databricks.cluster.profile': 'serverless'
+    'spark.databricks.sql.initial.catalog.name': 'main'
+    'spark.sql.execution.arrow.pyspark.enabled': 'true'
+  }
+  sparkEnvVars: {
+    PYSPARK_PYTHON: '/databricks/python3/bin/python3'
+  }
+  customTags: {
+    purpose: 'shared-analytics'
+    department: 'data-science'
+    auto_shutdown: 'enabled'
+  }
+}
+"
+)]
+[BicepDocCustom("Notes", @"When working with the 'Cluster' resource, ensure you have the extension imported in your Bicep file:
+
+```bicep
+// main.bicep
+targetScope = 'local'
+param workspaceUrl string
+extension databricksExtension with {
+  workspaceUrl: workspaceUrl
+}
+
+// main.bicepparam
+using 'main.bicep'
+param workspaceUrl = '<workspaceUrl>'
+```
+
+Please note the following important considerations when using the `Cluster` resource:
+
+- Either `numWorkers` or `autoScale` must be specified, but not both
+- Choose appropriate node types based on your workload requirements (CPU, memory, GPU)
+- Use `dataSecurityMode` to control access patterns: `SINGLE_USER`, `USER_ISOLATION`, or `LEGACY_SINGLE_USER_STANDARD`
+- Set `autoterminationMinutes` to control costs by automatically terminating idle clusters
+- Use Azure spot instances with `azureAttributes` for cost optimization on fault-tolerant workloads
+- Configure `sparkConf` for performance tuning and feature enablement
+- Use `customTags` for cost tracking, governance, and resource organization
+- Consider `runtimeEngine` options: `STANDARD` or `PHOTON` for better performance")]
+[BicepDocCustom("Additional reference", @"For more information, see the following links:
+
+- [Databricks Clusters API documentation][00]
+- [Cluster configuration best practices][01]
+- [Azure Databricks node types][02]
+- [Spark configuration reference][03]
+
+<!-- Link reference definitions -->
+[00]: https://docs.databricks.com/api/azure/workspace/clusters/create
+[01]: https://docs.databricks.com/compute/cluster-config-best-practices.html
+[02]: https://docs.databricks.com/compute/configure.html#node-types
+[03]: https://spark.apache.org/docs/latest/configuration.html")]
 [ResourceType("Cluster")]
 public class Cluster : ClusterIdentifiers
 {

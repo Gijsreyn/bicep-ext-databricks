@@ -85,3 +85,10 @@ applyTo: '**/*.cs'
 - Demonstrate deployment to Azure App Service, Azure Container Apps, or other hosting options.
 - Show how to implement health checks and readiness probes.
 - Explain environment-specific configurations for different deployment stages.
+
+## Bicep.LocalDeploy annotations
+
+- Each model should have a `[BicepFrontMatter("category", "<category>")]` attribute.
+- Each model should have a `[BicepDocHeading("<resourceName>", "<description>")]` attribute.
+- Each model should have a `[BicepDocExample("<example>")]` attribute with a code snippet demonstrating how to use the resource.
+- Each model should have a `[BicepDocCustom("Additional reference", "<description>")]` attribute with a link to relevant documentation.
