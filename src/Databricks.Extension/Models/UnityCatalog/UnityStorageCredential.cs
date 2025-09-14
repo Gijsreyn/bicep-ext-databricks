@@ -101,15 +101,9 @@ Please note the following important considerations when using the `UnityStorageC
 [BicepDocCustom("Additional reference", @"For more information, see the following links:
 
 - [Unity Catalog storage credentials API documentation][00]
-- [Azure authentication for Unity Catalog][01]
-- [Access Connectors for Azure Databricks][02]
-- [Managed Identity authentication][03]
 
 <!-- Link reference definitions -->
-[00]: https://docs.databricks.com/api/azure/workspace/storagecredentials/create
-[01]: https://docs.databricks.com/connect/unity-catalog/azure-credentials.html
-[02]: https://docs.databricks.com/administration-guide/cloud-configurations/azure/access-connector.html
-[03]: https://docs.databricks.com/connect/unity-catalog/azure-managed-identity.html")]
+[00]: https://docs.databricks.com/api/azure/workspace/storagecredentials/create")]
 [ResourceType("UnityStorageCredential")]
 public class UnityStorageCredential : UnityStorageCredentialIdentifiers
 {

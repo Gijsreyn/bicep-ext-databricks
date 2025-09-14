@@ -133,11 +133,9 @@ Please note the following important considerations when using the `UnityCredenti
 For more information, see the following links:
 
 - [Unity Catalog credentials API documentation][00]
-- [Azure authentication in Unity Catalog][01]
-- [Managing credentials for external data access][02]
+- [Managing credentials for external data access][01]
 
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/credentials/create
-[01]: https://docs.databricks.com/connect/unity-catalog/azure-credentials.html
-[02]: https://docs.databricks.com/data-governance/unity-catalog/manage-external-locations-and-credentials.html
+[01]: https://docs.databricks.com/data-governance/unity-catalog/manage-external-locations-and-credentials.html
 

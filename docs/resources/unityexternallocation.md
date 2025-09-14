@@ -153,13 +153,9 @@ Please note the following important considerations when using the `UnityExternal
 For more information, see the following links:
 
 - [Unity Catalog external locations API documentation][00]
-- [External locations in Unity Catalog][01]
-- [File events and notifications][02]
-- [Azure Data Lake Storage with Unity Catalog][03]
+- [File events and notifications][01]
 
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/externallocations/create
-[01]: https://docs.databricks.com/data-governance/unity-catalog/manage-external-locations-and-credentials.html
-[02]: https://docs.databricks.com/ingestion/file-detection/index.html
-[03]: https://docs.databricks.com/connect/unity-catalog/azure-adls.html
+[01]: https://docs.databricks.com/ingestion/file-detection/index.html
 
