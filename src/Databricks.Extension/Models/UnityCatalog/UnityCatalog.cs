@@ -92,7 +92,7 @@ public enum InheritedFromType
 }
 "
 )]
-[BicepDocCustom("Notes", @"When working with the 'UnityCatalog' resource, ensure you have the extension imported in your Bicep file:
+[BicepDocCustom("Notes", @"When working with the `UnityCatalog` resource, ensure you have the extension imported in your Bicep file:
 
 ```bicep
 // main.bicep

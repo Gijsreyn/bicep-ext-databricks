@@ -1,5 +1,5 @@
 ﻿---
-category: "Compute"
+subcategory: "Compute"
 ---
 
 # Cluster
@@ -156,7 +156,7 @@ In addition to all arguments above, the following attributes are outputted:
 
 ## Notes
 
-When working with the 'Cluster' resource, ensure you have the extension imported in your Bicep file:
+When working with the `Cluster` resource, ensure you have the extension imported in your Bicep file:
 
 ```bicep
 // main.bicep

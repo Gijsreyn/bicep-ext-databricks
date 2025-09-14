@@ -71,7 +71,7 @@ public enum CredentialIsolationMode
 }
 "
 )]
-[BicepDocCustom("Notes", @"When working with the 'UnityCredential' resource, ensure you have the extension imported in your Bicep file:
+[BicepDocCustom("Notes", @"When working with the `UnityCredential` resource, ensure you have the extension imported in your Bicep file:
 
 ```bicep
 // main.bicep

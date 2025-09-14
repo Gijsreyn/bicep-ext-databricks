@@ -71,7 +71,7 @@ namespace Databricks.Models.UnityCatalog;
 }
 "
 )]
-[BicepDocCustom("Notes", @"When working with the 'UnitySchema' resource, ensure you have the extension imported in your Bicep file:
+[BicepDocCustom("Notes", @"When working with the `UnitySchema` resource, ensure you have the extension imported in your Bicep file:
 
 ```bicep
 // main.bicep

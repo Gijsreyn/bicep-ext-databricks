@@ -82,7 +82,7 @@ public enum ExternalLocationIsolationMode
 }
 "
 )]
-[BicepDocCustom("Notes", @"When working with the 'UnityExternalLocation' resource, ensure you have the extension imported in your Bicep file:
+[BicepDocCustom("Notes", @"When working with the `UnityExternalLocation` resource, ensure you have the extension imported in your Bicep file:
 
 ```bicep
 // main.bicep

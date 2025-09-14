@@ -94,7 +94,7 @@ public enum CredentialType
 }
 "
 )]
-[BicepDocCustom("Notes", @"When working with the 'UnityConnection' resource, ensure you have the extension imported in your Bicep file:
+[BicepDocCustom("Notes", @"When working with the `UnityConnection` resource, ensure you have the extension imported in your Bicep file:
 
 ```bicep
 // main.bicep
