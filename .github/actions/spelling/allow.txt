@@ -87,7 +87,7 @@ mykeyvault
 myqueue
 myrepo
 myuser
-postgre
+postgres
 secretscope
 snowflakecomputing
 testsubscription
@@ -98,3 +98,4 @@ unityexternallocation
 unityschema
 unitystoragecredential
 xxxxxxxxxxxxxxxxxxxx
+postgre
