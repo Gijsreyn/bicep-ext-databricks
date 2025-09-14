@@ -33,6 +33,101 @@ public enum CredentialType
     UNKNOWN_CREDENTIAL_TYPE
 }
 
+
+[BicepFrontMatter("category", "Unity Catalog")]
+[BicepDocHeading("UnityConnection", "Represents a Unity Catalog connection for accessing external data sources.")]
+[BicepDocExample(
+    "Creating a PostgreSQL connection",
+    "This example shows how to create a connection to a PostgreSQL database.",
+    @"resource postgresConnection 'UnityConnection' = {
+  name: 'postgres_analytics'
+  connectionType: 'POSTGRESQL'
+  comment: 'Connection to analytics PostgreSQL database'
+  owner: 'data-engineering@company.com'
+  readOnly: false
+  options: {
+    host: 'postgres.company.com'
+    port: '5432'
+    database: 'analytics'
+  }
+}
+"
+)]
+[BicepDocExample(
+    "Creating a Snowflake connection",
+    "This example shows how to create a connection to Snowflake.",
+    @"resource snowflakeConnection 'UnityConnection' = {
+  name: 'snowflake_warehouse'
+  connectionType: 'SNOWFLAKE'
+  comment: 'Connection to Snowflake data warehouse'
+  owner: 'analytics-team@company.com'
+  readOnly: true
+  options: {
+    account: 'company.snowflakecomputing.com'
+    warehouse: 'ANALYTICS_WH'
+    database: 'PROD_DB'
+    schema: 'PUBLIC'
+  }
+  properties: {
+    environment: 'production'
+    team: 'analytics'
+  }
+}
+"
+)]
+[BicepDocExample(
+    "Creating a SQL Server connection",
+    "This example shows how to create a connection to SQL Server.",
+    @"resource sqlServerConnection 'UnityConnection' = {
+  name: 'sql_server_erp'
+  connectionType: 'SQLSERVER'
+  comment: 'Connection to ERP SQL Server database'
+  owner: 'business-intelligence@company.com'
+  readOnly: true
+  options: {
+    host: 'sqlserver.internal.com'
+    port: '1433'
+    database: 'ERP_PROD'
+    encrypt: 'true'
+    trustServerCertificate: 'false'
+  }
+}
+"
+)]
+[BicepDocCustom("Notes", @"When working with the 'UnityConnection' resource, ensure you have the extension imported in your Bicep file:
+
+```bicep
+// main.bicep
+targetScope = 'local'
+param workspaceUrl string
+extension databricksExtension with {
+  workspaceUrl: workspaceUrl
+}
+
+// main.bicepparam
+using 'main.bicep'
+param workspaceUrl = '<workspaceUrl>'
+```
+
+Please note the following important considerations when using the `UnityConnection` resource:
+
+- Unity Catalog connections require appropriate network connectivity and credentials
+- Connection names must be unique within the metastore
+- The `options` object contains connection-specific parameters (host, port, database, etc.)
+- Use `readOnly: true` for connections that should only allow read operations
+- Credentials are managed separately and associated with the connection
+- Different connection types require different options - refer to the specific database documentation
+- Test connectivity before deploying to production environments")]
+[BicepDocCustom("Additional reference", @"For more information, see the following links:
+
+- [Unity Catalog connections API documentation][00]
+- [External data sources in Unity Catalog][01]
+- [Connection types and configuration][02]
+
+<!-- Link reference definitions -->
+[00]: https://docs.databricks.com/api/azure/workspace/connections/create
+[01]: https://docs.databricks.com/connect/unity-catalog/index.html
+[02]: https://docs.databricks.com/connect/unity-catalog/external-locations.html")]
 [ResourceType("UnityConnection")]
 public class UnityConnection : UnityConnectionIdentifiers
 {

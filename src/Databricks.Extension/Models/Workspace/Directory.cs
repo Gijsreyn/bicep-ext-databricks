@@ -1,5 +1,4 @@
 using Azure.Bicep.Types.Concrete;
-using Bicep.Local.Extension.Types.Attributes;
 using System.Text.Json.Serialization;
 
 namespace Databricks.Models.Workspace;
@@ -14,6 +13,36 @@ public enum ObjectType
     DASHBOARD
 }
 
+[BicepFrontMatter("category", "Workspace")]
+[BicepDocHeading("Directory", "Represents a directory in the Databricks workspace.")]
+[BicepDocExample(
+    "Creating a directory",
+    "This example shows how to create a directory in the Databricks workspace.",
+    @"resource directory 'Directory' = {
+  path: '/Users/fake@example.com/directory'
+}
+"
+)]
+[BicepDocCustom("Notes", @"When working with the `Directory` resource, ensure you have the extension imported in your Bicep file:
+
+```bicep
+// main.bicep
+targetScope = 'local'
+param workspaceUrl string
+extension databricksExtension with {
+  workspaceUrl: workspaceUrl
+}
+
+// main.bicepparam
+using 'main.bicep'
+param workspaceUrl = '<workspaceUrl>'
+```")]
+[BicepDocCustom("Additional reference", @"For more information, see the following links:
+
+- [Databricks Workspace API documentation][00]
+
+<!-- Link reference definitions -->
+[00]: https://docs.databricks.com/api/azure/workspace/workspace/mkdirs")]
 [ResourceType("Directory")]
 public class Directory : DirectoryIdentifiers
 {

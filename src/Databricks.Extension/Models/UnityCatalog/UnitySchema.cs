@@ -4,6 +4,109 @@ using System.Text.Json.Serialization;
 
 namespace Databricks.Models.UnityCatalog;
 
+
+[BicepFrontMatter("category", "Unity Catalog")]
+[BicepDocHeading("UnitySchema", "Represents a Unity Catalog schema for organizing tables, views, and other database objects.")]
+[BicepDocExample(
+    "Creating a basic schema",
+    "This example shows how to create a basic schema in a Unity Catalog.",
+    @"resource schema 'UnitySchema' = {
+  name: 'analytics'
+  catalogName: 'my_catalog'
+  comment: 'Schema for analytics data and models'
+  owner: 'analytics-team@company.com'
+  enablePredictiveOptimization: 'ENABLE'
+}
+"
+)]
+[BicepDocExample(
+    "Creating a schema with custom storage",
+    "This example shows how to create a schema with a custom storage location.",
+    @"resource schemaWithStorage 'UnitySchema' = {
+  name: 'external_data'
+  catalogName: 'analytics_catalog'
+  comment: 'Schema for external data sources'
+  storageRoot: 'abfss://schemas@mydatalake.dfs.core.windows.net/external_data'
+  owner: 'data-engineering@company.com'
+  enablePredictiveOptimization: 'INHERIT'
+  properties: {
+    department: 'data-engineering'
+    environment: 'production'
+    data_classification: 'internal'
+  }
+}
+"
+)]
+[BicepDocExample(
+    "Creating a schema for machine learning",
+    "This example shows how to create a schema specifically for machine learning workflows.",
+    @"resource mlSchema 'UnitySchema' = {
+  name: 'ml_models'
+  catalogName: 'ml_catalog'
+  comment: 'Schema for machine learning models and experiments'
+  owner: 'ml-platform@company.com'
+  enablePredictiveOptimization: 'DISABLE'
+  properties: {
+    team: 'ml-platform'
+    use_case: 'model_training'
+    governance_tier: 'standard'
+  }
+}
+"
+)]
+[BicepDocExample(
+    "Creating a schema for raw data",
+    "This example shows how to create a schema for raw data ingestion.",
+    @"resource rawDataSchema 'UnitySchema' = {
+  name: 'raw_data'
+  catalogName: 'data_lake_catalog'
+  comment: 'Schema for raw data ingestion from various sources'
+  storageRoot: 'abfss://raw@datalake.dfs.core.windows.net/raw'
+  owner: 'data-ingestion@company.com'
+  properties: {
+    data_tier: 'bronze'
+    retention_days: '365'
+    compression: 'gzip'
+  }
+}
+"
+)]
+[BicepDocCustom("Notes", @"When working with the 'UnitySchema' resource, ensure you have the extension imported in your Bicep file:
+
+```bicep
+// main.bicep
+targetScope = 'local'
+param workspaceUrl string
+extension databricksExtension with {
+  workspaceUrl: workspaceUrl
+}
+
+// main.bicepparam
+using 'main.bicep'
+param workspaceUrl = '<workspaceUrl>'
+```
+
+Please note the following important considerations when using the `UnitySchema` resource:
+
+- The catalog specified in `catalogName` must exist before creating the schema
+- Schema names must be unique within the catalog and follow naming conventions (alphanumeric and underscores)
+- The `storageRoot` is optional; if not specified, the schema will use the catalog's default storage
+- Predictive optimization settings can be inherited from the catalog or set explicitly
+- Use meaningful properties to add metadata for governance and discovery
+- Schema ownership determines who can manage the schema and grant permissions
+- Consider data tiering strategies (bronze/silver/gold) when organizing schemas")]
+[BicepDocCustom("Additional reference", @"For more information, see the following links:
+
+- [Unity Catalog schemas API documentation][00]
+- [Schema management in Unity Catalog][01]
+- [Data organization with Unity Catalog][02]
+- [Predictive optimization in Unity Catalog][03]
+
+<!-- Link reference definitions -->
+[00]: https://docs.databricks.com/api/azure/workspace/schemas/create
+[01]: https://docs.databricks.com/data-governance/unity-catalog/create-schemas.html
+[02]: https://docs.databricks.com/data-governance/unity-catalog/index.html
+[03]: https://docs.databricks.com/optimizations/predictive-optimization.html")]
 [ResourceType("UnitySchema")]
 public class UnitySchema : UnitySchemaIdentifiers
 {

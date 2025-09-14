@@ -4,9 +4,6 @@ You can use the Databricks extension to create or update almost any
 [Databricks][00] resources. If you're new to Azure Databricks, please
 follow the official guide on [Microsoft Learn][01].
 
-Each resource defined in Bicep always requires the `workspaceUrl` and
-the [databricksExtension][02] imported.
-
 The following list represent the available resources in the extension.
 
 **Compute resources:**
@@ -18,12 +15,17 @@ The following list represent the available resources in the extension.
 - Create a [directory][04] in a workspace
 - Create a [Git Credential][05] in a workspace
 - Add a [Git repository][06] in the workspace
+- Create a [secret][10] in a secret scope
+- Create a [secret scope][11] for organizing secrets
 
-**Unity resources:**
+**Unity Catalog resources:**
 
 - Create a new [Unity Catalog][07]
-- Create a [Storage Credential][08]
-- Create an [External Location][09]
+- Create a [Unity Schema][12] for organizing tables and views
+- Create a [Unity Connection][13] for external data sources
+- Create a [Unity Credential][14] for authentication
+- Create a [Unity Storage Credential][08] for storage authentication
+- Create an [Unity External Location][09] for external data access
 
 ## `workspaceUrl` argument
 
@@ -75,11 +77,15 @@ set DATABRICKS_ACCESS_TOKEN=$token
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/introduction
 [01]: https://learn.microsoft.com/en-us/azure/databricks/introduction/
-[02]: databricks-extension.md
 [03]: ./resources/cluster.md
 [04]: ./resources/directory.md
 [05]: ./resources/gitCredential.md
-[06]: ./resources/repo.md
-[07]: ./resources/catalog.md
-[08]: ./resources/storageCredential.md
-[09]: ./resources/externalLocation.md
+[06]: ./resources/repository.md
+[07]: ./resources/unitycatalog.md
+[08]: ./resources/unitystoragecredential.md
+[09]: ./resources/unityexternallocation.md
+[10]: ./resources/secret.md
+[11]: ./resources/secretscope.md
+[12]: ./resources/unityschema.md
+[13]: ./resources/unityconnection.md
+[14]: ./resources/unitycredential.md
