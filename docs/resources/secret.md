@@ -94,4 +94,3 @@ For more information, see the following links:
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/secrets/putsecret
 [01]: https://docs.databricks.com/security/secrets/index.html
-

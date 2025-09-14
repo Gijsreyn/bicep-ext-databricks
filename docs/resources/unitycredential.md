@@ -73,12 +73,12 @@ The following arguments are available:
 - `name` - (Required) The name of the credential.
 - `purpose` - (Required) The purpose of the credential. (Can be `STORAGE`, or `SERVICE`)
 - `azureManagedIdentity` - (Optional) Azure Managed Identity configuration for the credential:
-  - `accessConnectorId` - (Optional) The ID of the Azure Access Connector.
-  - `managedIdentityId` - (Required) The ID of the Azure Managed Identity.
+    - `accessConnectorId` - (Optional) The ID of the Azure Access Connector.
+    - `managedIdentityId` - (Required) The ID of the Azure Managed Identity.
 - `azureServicePrincipal` - (Optional) Azure Service Principal configuration for the credential:
-  - `applicationId` - (Required) The application ID of the Azure Service Principal.
-  - `clientSecret` - (Required) The client secret of the Azure Service Principal.
-  - `directoryId` - (Required) The directory ID (tenant ID) of the Azure Service Principal.
+    - `applicationId` - (Required) The application ID of the Azure Service Principal.
+    - `clientSecret` - (Required) The client secret of the Azure Service Principal.
+    - `directoryId` - (Required) The directory ID (tenant ID) of the Azure Service Principal.
 - `comment` - (Optional) User-provided free-form text description.
 - `forceDestroy` - (Optional) Whether to force destroy the credential.
 - `forceUpdate` - (Optional) Whether to force update the credential.
@@ -94,7 +94,8 @@ In addition to all arguments above, the following attributes are outputted:
 - `createdBy` - Username of credential creator.
 - `fullName` - The full name of the credential.
 - `id` - Unique identifier of the credential.
-- `isolationMode` - Whether the credential is accessible from all workspaces or a specific set of workspaces. (Can be `ISOLATION_MODE_OPEN`, or `ISOLATION_MODE_ISOLATED`)
+- `isolationMode` - Whether the credential is accessible from all workspaces or a specific set of workspaces.
+  (Can be `ISOLATION_MODE_OPEN`, or `ISOLATION_MODE_ISOLATED`)
 - `metastoreId` - Unique identifier of the metastore for the credential.
 - `updatedAt` - Time at which this credential was last modified, in epoch milliseconds.
 - `updatedBy` - Username of user who last modified credential.
@@ -138,4 +139,3 @@ For more information, see the following links:
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/credentials/create
 [01]: https://docs.databricks.com/data-governance/unity-catalog/manage-external-locations-and-credentials.html
-

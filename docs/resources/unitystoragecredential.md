@@ -87,12 +87,12 @@ The following arguments are available:
 
 - `name` - (Required) The name of the storage credential.
 - `azureManagedIdentity` - (Optional) Azure Managed Identity configuration:
-  - `accessConnectorId` - (Required) The resource ID of the Azure Databricks Access Connector.
-  - `managedIdentityId` - (Required) The resource ID of the Azure User Assigned Managed Identity.
+    - `accessConnectorId` - (Required) The resource ID of the Azure Databricks Access Connector.
+    - `managedIdentityId` - (Required) The resource ID of the Azure User Assigned Managed Identity.
 - `azureServicePrincipal` - (Optional) Azure Service Principal configuration:
-  - `applicationId` - (Required) The application ID of the Azure service principal.
-  - `clientSecret` - (Optional) The client secret of the Azure service principal.
-  - `directoryId` - (Required) The directory ID of the Azure service principal.
+    - `applicationId` - (Required) The application ID of the Azure service principal.
+    - `clientSecret` - (Optional) The client secret of the Azure service principal.
+    - `directoryId` - (Required) The directory ID of the Azure service principal.
 - `comment` - (Optional) User-provided free-form text description.
 - `owner` - (Optional) Username of current owner of storage credential.
 - `readOnly` - (Optional) Whether the storage credential is read-only.
@@ -149,4 +149,3 @@ For more information, see the following links:
 
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/storagecredentials/create
-

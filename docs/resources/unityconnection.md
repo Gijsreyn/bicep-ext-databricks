@@ -76,6 +76,7 @@ resource sqlServerConnection 'UnityConnection' = {
 
 The following arguments are available:
 
+<!-- markdownlint-disable MD013 -->
 - `connectionType` - (Required) The type of connection. (Can be `UNKNOWN_CONNECTION_TYPE`, `MYSQL`, `POSTGRESQL`, `SNOWFLAKE`, `REDSHIFT`, `SQLDW`, `SQLSERVER`, `DATABRICKS`, `SALESFORCE`, `BIGQUERY`, `WORKDAY_RAAS`, `HIVE_METASTORE`, `GA4_RAW_DATA`, `SERVICENOW`, `SALESFORCE_DATA_CLOUD`, `GLUE`, `ORACLE`, `TERADATA`, `HTTP`, or `POWER_BI`)
 - `name` - (Required) The name of the connection.
 - `comment` - (Optional) User-provided free-form text description.
@@ -95,7 +96,7 @@ In addition to all arguments above, the following attributes are outputted:
 - `fullName` - The full name of the connection.
 - `metastoreId` - Unique identifier of the metastore for the connection.
 - `provisioningInfo` - Provisioning info about the connection:
-  - `state` - The current provisioning state of the connection.
+    - `state` - The current provisioning state of the connection.
 - `securableType` - The type of the securable.
 - `updatedAt` - Time at which this connection was last modified, in epoch milliseconds.
 - `updatedBy` - Username of user who last modified connection.
@@ -140,4 +141,3 @@ For more information, see the following links:
 [00]: https://docs.databricks.com/api/azure/workspace/connections/create
 [01]: https://docs.databricks.com/connect/unity-catalog/index.html
 [02]: https://docs.databricks.com/connect/unity-catalog/external-locations.html
-

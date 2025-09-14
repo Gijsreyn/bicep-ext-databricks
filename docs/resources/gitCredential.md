@@ -25,7 +25,7 @@ resource gitCredential 'GitCredential' = {
 ## Argument reference
 
 The following arguments are available:
-
+<!-- markdownlint-disable MD013 -->
 - `gitProvider` - (Required) The Git provider. (Can be `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`, `gitHubEnterprise`, `bitbucketServer`, `gitLabEnterpriseEdition`, or `awsCodeCommit`)
 - `gitUsername` - (Required) The username for Git authentication.
 - `personalAccessToken` - (Required) The personal access token for Git authentication.
@@ -64,4 +64,3 @@ For more information, see the following links:
 
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/gitcredentials/create
-

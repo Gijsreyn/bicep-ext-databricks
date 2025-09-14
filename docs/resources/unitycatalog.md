@@ -60,6 +60,7 @@ resource sharingCatalog 'UnityCatalog' = {
 
 The following arguments are available:
 
+<!-- markdownlint-disable MD013 -->
 - `name` - (Required) Name of catalog.
 - `comment` - (Optional) User-provided free-form text description.
 - `connectionName` - (Optional) The name of the connection to an external data source.
@@ -82,13 +83,13 @@ In addition to all arguments above, the following attributes are outputted:
 - `createdAt` - Time at which this catalog was created, in epoch milliseconds.
 - `createdBy` - Username of catalog creator.
 - `effectivePredictiveOptimizationFlag` - The effective predictive optimization flag. (Can be `DISABLE`, `ENABLE`, or `INHERIT`):
-  - `inheritedFromName` - The name of the object from which the flag was inherited.
-  - `inheritedFromType` - The type of the object from which the flag was inherited. (Can be `CATALOG`, `SCHEMA`, or `TABLE`)
-  - `value` - The value of the effective predictive optimization flag. (Can be `DISABLE`, `ENABLE`, or `INHERIT`)
+    - `inheritedFromName` - The name of the object from which the flag was inherited.
+    - `inheritedFromType` - The type of the object from which the flag was inherited. (Can be `CATALOG`, `SCHEMA`, or `TABLE`)
+    - `value` - The value of the effective predictive optimization flag. (Can be `DISABLE`, `ENABLE`, or `INHERIT`)
 - `fullName` - The full name of the catalog.
 - `metastoreId` - Unique identifier of the metastore for the catalog.
 - `provisioningInfo` - Provisioning info about the catalog:
-  - `state` - The current provisioning state of the catalog. (Can be `PROVISIONING`, `PROVISIONED`, or `FAILED`)
+    - `state` - The current provisioning state of the catalog. (Can be `PROVISIONING`, `PROVISIONED`, or `FAILED`)
 - `securableType` - The type of the securable. (Can be `CATALOG`, `SCHEMA`, `TABLE`, or `VOLUME`)
 - `storageLocation` - Path to the storage location.
 - `updatedAt` - Time at which this catalog was last modified, in epoch milliseconds.
@@ -132,4 +133,3 @@ For more information, see the following links:
 [00]: https://docs.databricks.com/api/azure/workspace/catalogs/create
 [01]: https://docs.databricks.com/data-governance/unity-catalog/index.html
 [02]: https://docs.databricks.com/data-governance/unity-catalog/create-catalogs.html
-

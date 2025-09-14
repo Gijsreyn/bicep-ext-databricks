@@ -124,13 +124,13 @@ The following arguments are available:
 - `nodeTypeId` - (Required) The node type ID for worker nodes.
 - `sparkVersion` - (Required) The Spark version of the cluster.
 - `autoScale` - (Optional) Auto-scaling configuration for the cluster:
-  - `maxWorkers` - (Required) Maximum number of worker nodes.
-  - `minWorkers` - (Required) Minimum number of worker nodes.
+    - `maxWorkers` - (Required) Maximum number of worker nodes.
+    - `minWorkers` - (Required) Minimum number of worker nodes.
 - `autoterminationMinutes` - (Optional) Auto-termination time in minutes.
 - `azureAttributes` - (Optional) Azure-specific attributes for the cluster:
-  - `availability` - (Optional) Availability type for Azure instances.
-  - `firstOnDemand` - (Optional) Number of on-demand instances to use before using spot instances.
-  - `spotBidMaxPrice` - (Optional) Maximum price for spot instances.
+    - `availability` - (Optional) Availability type for Azure instances.
+    - `firstOnDemand` - (Optional) Number of on-demand instances to use before using spot instances.
+    - `spotBidMaxPrice` - (Optional) Maximum price for spot instances.
 - `customTags` - (Optional) Custom tags for the cluster.
 - `dataSecurityMode` - (Optional) Data security mode for the cluster.
 - `driverNodeTypeId` - (Optional) The node type ID for the driver node.
@@ -196,4 +196,3 @@ For more information, see the following links:
 [01]: https://docs.databricks.com/compute/cluster-config-best-practices.html
 [02]: https://docs.databricks.com/compute/configure.html#node-types
 [03]: https://spark.apache.org/docs/latest/configuration.html
-

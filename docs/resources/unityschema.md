@@ -101,9 +101,9 @@ In addition to all arguments above, the following attributes are outputted:
 - `createdAt` - Time at which this schema was created, in epoch milliseconds.
 - `createdBy` - Username of schema creator.
 - `effectivePredictiveOptimizationFlag` - Effective predictive optimization flag for the schema:
-  - `inheritedFromName` - The name from which the flag is inherited.
-  - `inheritedFromType` - The type from which the flag is inherited.
-  - `value` - The effective predictive optimization flag value.
+    - `inheritedFromName` - The name from which the flag is inherited.
+    - `inheritedFromType` - The type from which the flag is inherited.
+    - `value` - The effective predictive optimization flag value.
 - `fullName` - The full name of the schema.
 - `metastoreId` - Unique identifier of the metastore for the schema.
 - `schemaId` - Unique identifier of the schema.
@@ -152,4 +152,3 @@ For more information, see the following links:
 [01]: https://docs.databricks.com/data-governance/unity-catalog/create-schemas.html
 [02]: https://docs.databricks.com/data-governance/unity-catalog/index.html
 [03]: https://docs.databricks.com/optimizations/predictive-optimization.html
-

@@ -58,12 +58,13 @@ resource repository 'Repository' = {
 
 The following arguments are available:
 
+<!-- markdownlint-disable MD013 -->
 - `provider` - (Required) The Git provider for the repository. (Can be `gitHub`, `bitbucketCloud`, `gitLab`, `azureDevOpsServices`, `gitHubEnterprise`, `bitbucketServer`, `gitLabEnterpriseEdition`, or `awsCodeCommit`)
 - `url` - (Required) The URL of the Git repository.
 - `branch` - (Optional) The branch to checkout.
 - `path` - (Optional) The path where the repository will be cloned in the Databricks workspace.
 - `sparseCheckout` - (Optional) Sparse checkout configuration:
-  - `patterns` - (Optional) List of patterns for sparse checkout.
+    - `patterns` - (Optional) List of patterns for sparse checkout.
 
 ## Attribute reference
 
@@ -102,4 +103,3 @@ For more information, see the following links:
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/repos/create
 [01]: https://docs.databricks.com/repos/index.html
-

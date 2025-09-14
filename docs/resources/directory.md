@@ -57,4 +57,3 @@ For more information, see the following links:
 
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/workspace/mkdirs
-

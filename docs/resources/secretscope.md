@@ -49,12 +49,12 @@ resource simpleScope 'SecretScope' = {
 ## Argument reference
 
 The following arguments are available:
-
+<!-- markdownlint-disable MD013 -->
 - `scopeName` - (Required) The name of the secret scope. Must consist of alphanumeric characters, dashes, underscores, and periods, and may not exceed 128 characters.
 - `initialManagePrincipal` - (Optional) The principal that is initially granted MANAGE permission to the created scope.
 - `keyVaultMetadata` - (Optional) Azure Key Vault metadata if using Azure Key Vault backend:
-  - `dnsName` - (Required) The DNS name of the Azure Key Vault.
-  - `resourceId` - (Required) The resource ID of the Azure Key Vault.
+    - `dnsName` - (Required) The DNS name of the Azure Key Vault.
+    - `resourceId` - (Required) The resource ID of the Azure Key Vault.
 
 ## Attribute reference
 
@@ -99,4 +99,3 @@ For more information, see the following links:
 [00]: https://docs.databricks.com/api/azure/workspace/secrets/createscope
 [01]: https://docs.databricks.com/security/secrets/index.html
 [02]: https://docs.databricks.com/security/secrets/secret-scopes.html#azure-key-vault-backed-scopes
-

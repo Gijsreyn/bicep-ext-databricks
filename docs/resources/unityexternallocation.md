@@ -97,12 +97,12 @@ The following arguments are available:
 - `encryptionDetails` - (Optional) Encryption details for the external location.
 - `fallback` - (Optional) Indicates whether this location will be used as a fallback location.
 - `fileEventQueue` - (Optional) Configuration for file event queue:
-  - `managedAqs` - (Optional) Managed Azure Queue Storage configuration.
-  - `managedPubsub` - (Optional) Managed Google Pub/Sub configuration.
-  - `managedSqs` - (Optional) Managed Amazon SQS configuration.
-  - `providedAqs` - (Optional) Provided Azure Queue Storage configuration.
-  - `providedPubsub` - (Optional) Provided Google Pub/Sub configuration.
-  - `providedSqs` - (Optional) Provided Amazon SQS configuration.
+    - `managedAqs` - (Optional) Managed Azure Queue Storage configuration.
+    - `managedPubsub` - (Optional) Managed Google Pub/Sub configuration.
+    - `managedSqs` - (Optional) Managed Amazon SQS configuration.
+    - `providedAqs` - (Optional) Provided Azure Queue Storage configuration.
+    - `providedPubsub` - (Optional) Provided Google Pub/Sub configuration.
+    - `providedSqs` - (Optional) Provided Amazon SQS configuration.
 - `owner` - (Optional) Username of current owner of external location.
 - `readOnly` - (Optional) Whether the external location is read-only.
 - `skipValidation` - (Optional) Suppress validation errors.
@@ -158,4 +158,3 @@ For more information, see the following links:
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/externallocations/create
 [01]: https://docs.databricks.com/data-governance/unity-catalog/manage-external-locations-and-credentials.html
-
