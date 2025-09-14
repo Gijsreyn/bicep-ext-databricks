@@ -1,6 +1,21 @@
 name: Check Markdown links
 
-on: push
+on:
+  push:
+    branches:
+      - '**'
+      - 'main'
+    tags-ignore:
+      - '**'
+  pull_request_target:
+    branches:
+      - '**'
+    tags-ignore:
+      - '**'
+    types:
+      - 'opened'
+      - 'reopened'
+      - 'synchronize'
 
 jobs:
   markdown-link-check:
@@ -11,4 +26,4 @@ jobs:
         fetch-depth: 0
     - uses: gaurav-nelson/github-action-markdown-link-check@v1
       with:
-        use-verbose-mode: 'yes'
+        folder-path: 'docs/*'
