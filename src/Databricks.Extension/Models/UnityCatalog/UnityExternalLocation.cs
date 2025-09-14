@@ -110,11 +110,11 @@ Please note the following important considerations when using the `UnityExternal
 [BicepDocCustom("Additional reference", @"For more information, see the following links:
 
 - [Unity Catalog external locations API documentation][00]
-- [File events and notifications][01]
+- [Managing external locations and credentials][01]
 
 <!-- Link reference definitions -->
 [00]: https://docs.databricks.com/api/azure/workspace/externallocations/create
-[01]: https://docs.databricks.com/ingestion/file-detection/index.html")]
+[01]: https://docs.databricks.com/data-governance/unity-catalog/manage-external-locations-and-credentials.html")]
 [ResourceType("UnityExternalLocation")]
 public class UnityExternalLocation : UnityExternalLocationIdentifiers
 {
