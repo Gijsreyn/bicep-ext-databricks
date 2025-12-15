@@ -15,7 +15,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Azure.Bicep.Local.Extension" Version="0.38.33" />
+    <PackageReference Include="Azure.Bicep.Local.Extension" Version="0.39.26" />
     <PackageReference Include="Azure.Identity" Version="1.14.2" />
     <PackageReference Include="Bicep.LocalDeploy" Version="1.0.1" />
   </ItemGroup>
